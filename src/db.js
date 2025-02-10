@@ -14,6 +14,9 @@ export const pool = createPool({
   password: DB_PASSWORD,
   port: DB_PORT,
   database: DB_DATABASE,
+  ssl: {
+    rejectUnauthorized: true // Habilitar SSL
+  }
 });
 
 // Probar la conexión y manejar errores
@@ -39,6 +42,13 @@ pool
     } else if (err.code === "ER_BAD_DB_ERROR") {
       console.error(
         `La base de datos '${DB_DATABASE}' no existe. Verifica el nombre de la base de datos.`
+      );
+    } else if (err.code === "ETIMEDOUT") {
+      console.error(
+        `Tiempo de espera agotado al intentar conectarse a ${DB_HOST}:${DB_PORT}.`
+      );
+      console.error(
+        "Verifica tu conexión a internet, el firewall y que el servidor MySQL esté accesible."
       );
     } else {
       console.error("Error desconocido:", err);
