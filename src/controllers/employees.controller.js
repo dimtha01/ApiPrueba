@@ -6,16 +6,15 @@ export const getClientes = async (req, res) => {
         SELECT 
     c.id, 
     c.nombre, 
+    c.email, 
+    c.telefono, 
+    c.direccion, 
+    c.unidad_negocio, 
+    c.razon_social, 
     c.nombre_comercial, 
-    c.rif, 
-    c.direccion_fiscal, 
-    c.pais, 
-    e.nombre AS estado, 
-    u.nombre AS unidad_negocio
-FROM cliente c
-JOIN estados_venezuela e ON c.estado_id = e.id
-JOIN unidad_negocio u ON c.unidad_negocio_id = u.id 
-ORDER BY c.id ASC;
+    r.nombre AS region
+FROM clientes c
+LEFT JOIN regiones r ON c.id_region = r.id
     `);
     res.json(rows);
   } catch (error) {
@@ -23,20 +22,38 @@ ORDER BY c.id ASC;
   }
 };
 
-export const getEmployee = async (req, res) => {
+export const createCliente = async (req, res) => {
   try {
-    const { id } = req.params;
-    const [rows] = await pool.query("SELECT * FROM employee WHERE id = ?", [
-      id,
-    ]);
+    // Extraer los datos del cuerpo de la solicitud
+    const { nombre, nombre_comercial, rif, direccion_fiscal, pais, estado_id, unidad_negocio_id } = req.body;
 
-    if (rows.length <= 0) {
-      return res.status(404).json({ message: "Employee not found" });
+    // Validar que se proporcionen todos los campos necesarios
+    if (!nombre || !nombre_comercial || !rif || !direccion_fiscal || !pais || !estado_id || !unidad_negocio_id) {
+      return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
 
-    res.json(rows[0]);
+    // Ejecutar la consulta SQL para insertar el nuevo cliente
+    const [result] = await pool.query(
+      `INSERT INTO cliente (nombre, nombre_comercial, rif, direccion_fiscal, pais, estado_id, unidad_negocio_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [nombre, nombre_comercial, rif, direccion_fiscal, pais, estado_id, unidad_negocio_id]
+    );
+
+    // Devolver el ID del cliente insertado
+    res.status(201).json({
+      id: result.insertId,
+      nombre,
+      nombre_comercial,
+      rif,
+      direccion_fiscal,
+      pais,
+      estado_id,
+      unidad_negocio_id,
+      message: "Cliente creado exitosamente"
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Something goes wrong" });
+    console.error(error); // Registrar el error en la consola para depuración
+    return res.status(500).json({ message: "Algo salió mal al crear el cliente" });
   }
 };
 

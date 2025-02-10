@@ -1,9 +1,9 @@
 import { Router } from "express";
 import {
+  createCliente,
   createEmployee,
   deleteEmployee,
   getClientes,
-  getEmployee,
   updateEmployee,
 } from "../controllers/employees.controller.js";
 
@@ -13,7 +13,7 @@ const router = Router();
 router.get("/clientes", getClientes);
 
 // GET An Employee
-router.get("/employees/:id", getEmployee);
+router.post("/clientes", createCliente);
 
 // DELETE An Employee
 router.delete("/employees/:id", deleteEmployee);
