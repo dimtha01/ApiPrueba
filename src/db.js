@@ -15,7 +15,7 @@ export const pool = createPool({
   port: DB_PORT,
   database: DB_DATABASE,
   ssl: {
-    rejectUnauthorized: true // Habilitar SSL
+    rejectUnauthorized: false // Omitir la validación del certificado
   }
 });
 
