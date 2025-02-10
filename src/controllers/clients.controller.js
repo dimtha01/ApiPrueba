@@ -25,35 +25,68 @@ LEFT JOIN regiones r ON c.id_region = r.id
 export const createCliente = async (req, res) => {
   try {
     // Extraer los datos del cuerpo de la solicitud
-    const { nombre, nombre_comercial, rif, direccion_fiscal, pais, estado_id, unidad_negocio_id } = req.body;
+    const {
+      nombre,
+      razon_social,
+      nombre_comercial,
+      direccion_fiscal,
+      pais,
+      id_region,
+      unidad_negocio,
+      email, // Opcional
+      telefono, // Opcional
+      direccion, // Opcional
+    } = req.body;
 
-    // Validar que se proporcionen todos los campos necesarios
-    if (!nombre || !nombre_comercial || !rif || !direccion_fiscal || !pais || !estado_id || !unidad_negocio_id) {
-      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    // Validar que se proporcionen todos los campos obligatorios
+    if (
+      !nombre ||
+      !razon_social ||
+      !direccion_fiscal ||
+      !pais ||
+      !id_region ||
+      !unidad_negocio
+    ) {
+      return res.status(400).json({ message: "Todos los campos obligatorios deben ser proporcionados" });
     }
 
     // Ejecutar la consulta SQL para insertar el nuevo cliente
     const [result] = await pool.query(
-      `INSERT INTO cliente (nombre, nombre_comercial, rif, direccion_fiscal, pais, estado_id, unidad_negocio_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nombre, nombre_comercial, rif, direccion_fiscal, pais, estado_id, unidad_negocio_id]
+      `INSERT INTO clientes 
+        (nombre, razon_social, nombre_comercial, direccion_fiscal, pais, id_region, unidad_negocio, email, telefono, direccion)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        nombre,
+        razon_social,
+        nombre_comercial || null, // Permitir valores nulos
+        direccion_fiscal,
+        pais,
+        id_region,
+        unidad_negocio,
+        email || null, // Permitir valores nulos
+        telefono || null, // Permitir valores nulos
+        direccion || null, // Permitir valores nulos
+      ]
     );
 
-    // Devolver el ID del cliente insertado
+    // Devolver el ID del cliente insertado y un mensaje personalizado
     res.status(201).json({
       id: result.insertId,
       nombre,
+      razon_social,
       nombre_comercial,
-      rif,
       direccion_fiscal,
       pais,
-      estado_id,
-      unidad_negocio_id,
-      message: "Cliente creado exitosamente"
+      id_region,
+      unidad_negocio,
+      email,
+      telefono,
+      direccion,
+      message: `El cliente "${nombre}" ha sido creado exitosamente.`,
     });
   } catch (error) {
     console.error(error); // Registrar el error en la consola para depuración
-    return res.status(500).json({ message: "Algo salió mal al crear el cliente" });
+    return res.status(500).json({ message: "Ocurrió un error al intentar crear el cliente." });
   }
 };
 
