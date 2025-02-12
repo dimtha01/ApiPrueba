@@ -89,8 +89,6 @@ export const createAvanceFinanciero = async (req, res) => {
       numero_valuacion,
       monto_usd,
       numero_factura,
-      ofertado,
-      costo_planificado,
       id_estatus_proceso,
     } = req.body;
 
@@ -101,8 +99,6 @@ export const createAvanceFinanciero = async (req, res) => {
       !numero_valuacion ||
       !monto_usd ||
       !numero_factura ||
-      !ofertado ||
-      !costo_planificado ||
       !id_estatus_proceso
     ) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
@@ -117,10 +113,8 @@ export const createAvanceFinanciero = async (req, res) => {
         numero_valuacion,
         monto_usd,
         numero_factura,
-        ofertado,
-        costo_planificado,
         id_estatus_proceso
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?);
     `,
       [
         id_proyecto,
@@ -128,8 +122,6 @@ export const createAvanceFinanciero = async (req, res) => {
         numero_valuacion,
         monto_usd,
         numero_factura,
-        ofertado,
-        costo_planificado,
         id_estatus_proceso,
       ]
     );
