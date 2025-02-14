@@ -11,8 +11,6 @@ export const getAvanceFinanciero = async (req, res) => {
         af.numero_valuacion,
         af.monto_usd,
         af.numero_factura,
-        af.ofertado,
-        af.costo_planificado,
         ep.nombre_estatus AS estatus_proceso_nombre,
         ep.descripcion AS estatus_proceso_descripcion
       FROM 
@@ -39,7 +37,7 @@ export const getAvanceFinanciero = async (req, res) => {
 export const getAvanceFinancieroByProyectoId = async (req, res) => {
   try {
     // Obtener el ID del proyecto desde los parámetros de la URL
-    const  id_proyecto = req.params;
+    const id_proyecto = req.params;
 
     // Ejecutar la consulta SQL con filtro por id_proyecto
     const [rows] = await pool.query(
@@ -51,8 +49,6 @@ export const getAvanceFinancieroByProyectoId = async (req, res) => {
         af.numero_valuacion,
         af.monto_usd,
         af.numero_factura,
-        af.ofertado,
-        af.costo_planificado,
         ep.nombre_estatus AS estatus_proceso_nombre,
         ep.descripcion AS estatus_proceso_descripcion
       FROM 
@@ -69,7 +65,7 @@ export const getAvanceFinancieroByProyectoId = async (req, res) => {
 
     // Verificar si hay resultados
     if (rows.length === 0) {
-      return res.status(404).json({ message: "No se encontraron registros de avance financiero para este proyecto" });
+      return res.status(200).json([]);
     }
 
     // Devolver los resultados
@@ -139,6 +135,45 @@ export const createAvanceFinanciero = async (req, res) => {
   } catch (error) {
     // Manejar errores
     console.error("Error al crear el avance financiero:", error); // Registrar el error en la consola
+    return res.status(500).json({ message: "Algo salió mal", error: error.message });
+  }
+};
+export const updateEstatusAvanceFinanciero = async (req, res) => {
+  try {
+    // Extraer los datos del cuerpo de la solicitud
+    const { id_estatus_proceso } = req.body;
+    // Extraer el ID del avance financiero desde los parámetros de la ruta
+    const idAvanceFinanciero = req.params.id;
+
+    // Validar que todos los campos requeridos estén presentes
+    if (!id_estatus_proceso || !idAvanceFinanciero) {
+      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    }
+
+    // Ejecutar la consulta SQL para actualizar el registro
+    const [result] = await pool.query(
+      `
+      UPDATE avance_financiero 
+      SET id_estatus_proceso = ?
+      WHERE id = ?;
+    `,
+      [id_estatus_proceso, idAvanceFinanciero]
+    );
+
+    // Verificar si se actualizó correctamente
+    if (result.affectedRows === 0) {
+        return res.status(200).json([]);
+    }
+
+    // Devolver mensaje exitoso
+    res.status(200).json({
+      message: "Estado del avance financiero actualizado exitosamente",
+      updatedId: idAvanceFinanciero,
+      newStatusId: id_estatus_proceso,
+    });
+  } catch (error) {
+    // Manejar errores
+    console.error("Error al actualizar el estado del avance financiero:", error);
     return res.status(500).json({ message: "Algo salió mal", error: error.message });
   }
 };

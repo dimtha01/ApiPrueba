@@ -27,6 +27,40 @@ FROM
     return res.status(500).json({ message: "Something goes wrong" });
   }
 };
+export const getProyectoById = async (req, res) => {
+  try {
+    const params = req.params;
+    const [rows] = await pool.query(`
+      SELECT 
+        p.id,
+        p.numero,
+        p.nombre AS nombre_proyecto,
+        c.nombre AS nombre_cliente,
+        r.nombre AS nombre_responsable,
+        reg.nombre AS nombre_region,
+        c.unidad_negocio as unidad_negocio,
+        p.costo_estimado,
+        p.monto_ofertado,
+        p.fecha_inicio,
+        p.fecha_final,
+        p.duracion
+      FROM 
+        proyectos p
+        LEFT JOIN clientes c ON p.id_cliente = c.id
+        LEFT JOIN responsables r ON p.id_responsable = r.id
+        LEFT JOIN regiones reg ON p.id_region = reg.id
+      WHERE 
+        p.id = ?
+    `, params.id);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Proyecto no encontrado" });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Algo salió mal" });
+  }
+};
 
 export const postProyect = async (req, res) => {
   try {
