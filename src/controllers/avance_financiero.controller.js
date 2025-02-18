@@ -94,7 +94,6 @@ export const createAvanceFinanciero = async (req, res) => {
       !fecha ||
       !numero_valuacion ||
       !monto_usd ||
-      !numero_factura ||
       !id_estatus_proceso
     ) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
@@ -117,7 +116,7 @@ export const createAvanceFinanciero = async (req, res) => {
         fecha,
         numero_valuacion,
         monto_usd,
-        numero_factura,
+        numero_factura || null,
         id_estatus_proceso,
       ]
     );
@@ -141,28 +140,37 @@ export const createAvanceFinanciero = async (req, res) => {
 export const updateEstatusAvanceFinanciero = async (req, res) => {
   try {
     // Extraer los datos del cuerpo de la solicitud
-    const { id_estatus_proceso } = req.body;
+    const { id_estatus_proceso, numero_factura } = req.body;
     // Extraer el ID del avance financiero desde los parámetros de la ruta
     const idAvanceFinanciero = req.params.id;
 
-    // Validar que todos los campos requeridos estén presentes
+    // Validar que el campo obligatorio esté presente
     if (!id_estatus_proceso || !idAvanceFinanciero) {
-      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+      return res.status(400).json({ message: "El campo 'id_estatus_proceso' es obligatorio" });
     }
 
-    // Ejecutar la consulta SQL para actualizar el registro
-    const [result] = await pool.query(
-      `
+    // Construir la consulta SQL dinámicamente
+    let query = `
       UPDATE avance_financiero 
       SET id_estatus_proceso = ?
-      WHERE id = ?;
-    `,
-      [id_estatus_proceso, idAvanceFinanciero]
-    );
+    `;
+    const queryParams = [id_estatus_proceso];
+
+    // Si se proporciona el número de factura, agregarlo a la consulta
+    if (numero_factura !== undefined && numero_factura !== null && numero_factura.trim() !== "") {
+      query += `, numero_factura = ?`;
+      queryParams.push(numero_factura);
+    }
+
+    query += ` WHERE id = ?`;
+    queryParams.push(idAvanceFinanciero);
+
+    // Ejecutar la consulta SQL
+    const [result] = await pool.query(query, queryParams);
 
     // Verificar si se actualizó correctamente
     if (result.affectedRows === 0) {
-        return res.status(200).json([]);
+      return res.status(404).json({ message: "No se encontró el avance financiero con el ID proporcionado" });
     }
 
     // Devolver mensaje exitoso
@@ -170,6 +178,7 @@ export const updateEstatusAvanceFinanciero = async (req, res) => {
       message: "Estado del avance financiero actualizado exitosamente",
       updatedId: idAvanceFinanciero,
       newStatusId: id_estatus_proceso,
+      numeroFactura: numero_factura || "No proporcionado", // Indica si se actualizó o no el número de factura
     });
   } catch (error) {
     // Manejar errores

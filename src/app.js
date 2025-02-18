@@ -8,6 +8,8 @@ import avanceFinancieroRoutes from "./routes/avance_financiero.routes.js";
 import indexRoutes from "./routes/index.routes.js";
 import regionesRoutes from './routes/regiones.routes.js'
 import estatusRoutes from './routes/estatus.routes.js'
+import dashboardRoutes from './routes/dashboard.routes.js'
+import costosRoutes from './routes/costos.routes.js'
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.use("/api", avanceFisicoRoutes);
 app.use("/api", avanceFinancieroRoutes);
 app.use("/api", regionesRoutes);
 app.use("/api", estatusRoutes);
+app.use("/api", dashboardRoutes);
+app.use("/api", costosRoutes);
 
 // Middleware para manejar rutas no encontradas
 app.use((req, res, next) => {

@@ -5,8 +5,8 @@ export const getEstatus = async (req, res) => {
     const [rows] = await pool.query(`
         SELECT 
   e.nombre_estatus,
-  COUNT(DISTINCT a.id_proyecto) AS cantidad_proyectos,
-  COALESCE(SUM(a.costo_planificado), 0) AS suma_montos
+  COUNT(DISTINCT a.id_proyecto) AS cantidad_proyectos_distintos,
+  COALESCE(SUM(a.monto_usd), 0) AS suma_montos
 FROM 
   estatus_proceso e
 LEFT JOIN 
@@ -17,7 +17,7 @@ WHERE
 GROUP BY 
   e.id_estatus, e.nombre_estatus
 ORDER BY 
-  cantidad_proyectos DESC;
+  cantidad_proyectos_distintos DESC;
     `);
     res.json(rows);
   } catch (error) {

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 12, 2025 at 02:04 PM
+-- Generation Time: Feb 18, 2025 at 04:57 PM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.16
 
@@ -44,20 +44,17 @@ CREATE TABLE `avance_financiero` (
 --
 
 INSERT INTO `avance_financiero` (`id`, `id_proyecto`, `fecha`, `numero_valuacion`, `monto_usd`, `numero_factura`, `ofertado`, `costo_planificado`, `id_estatus_proceso`) VALUES
-(1, 1, '2024-02-10', '00001', 1000.00, 'F-12345', 1200.00, 1100.00, 1),
-(2, 2, '2024-02-12', '00002', 1500.00, 'F-67890', 1700.00, 1600.00, 2),
-(3, 1, '2025-02-11', '00001', 1000.00, 'F-12345', 1000.00, 10000.00, 6),
-(4, 2, '2025-02-11', '0003', 20000.22, 'F-12345', 10000.00, 10000.00, 6),
-(5, 2, '2025-02-11', '0004', 20000.00, 'F-12345', 10000.00, 1000.00, 5),
-(6, 10, '2025-02-11', '0001', 10000.00, 'F-12345', 1000.00, 1200.00, 5),
-(7, 15, '2025-02-12', '0009', 10000.00, 'F-12345', 10000.00, 10000.00, 5),
-(8, 17, '2025-02-12', '0001', 2000.00, 'F-12345', 100000.00, 100000.00, 4),
-(9, 2, '2025-02-12', '0003', 1000.00, 'F-12345', 100000.00, 100000.00, 4),
-(10, 4, '2025-02-12', '0003', 1000.00, '100000', 1000000.00, 100000.00, 4),
-(11, 12, '2025-02-12', '0003', 1000.00, '100000', 100000.00, 1000000.00, 5),
-(12, 12, '2025-02-12', '0003', 1000.00, 'F-12345', 100000.00, 100000.00, 5),
-(13, 12, '2025-02-12', '0003', 1000.00, '100000', 10000.00, 10000.00, 4),
-(14, 12, '2025-02-12', '0003', 1000.00, '12121', 1000.00, 10000.00, 6);
+(15, 25, '2025-02-17', '0001', 100.00, NULL, NULL, NULL, 5),
+(16, 25, '2025-02-17', '0002', 100.00, NULL, NULL, NULL, 5),
+(17, 25, '2025-02-17', '0003', 100.00, NULL, NULL, NULL, 4),
+(18, 26, '2025-02-17', '0001', 100.00, 'f-1233', NULL, NULL, 6),
+(19, 26, '2025-02-17', '0002', 100.00, NULL, NULL, NULL, 5),
+(20, 26, '2025-02-17', '0003', 100.00, 'f-1233', NULL, NULL, 6),
+(21, 27, '2025-02-17', '0001', 1000.00, NULL, NULL, NULL, 4),
+(22, 25, '2025-02-17', '0006', 100.02, NULL, NULL, NULL, 4),
+(23, 25, '2025-02-17', '0010', 100.00, 'f-1233', NULL, NULL, 6),
+(24, 26, '2025-02-17', '0004', 100.00, NULL, NULL, NULL, 4),
+(25, 28, '2025-02-18', '0001', 1000.00, NULL, NULL, NULL, 4);
 
 -- --------------------------------------------------------
 
@@ -79,15 +76,11 @@ CREATE TABLE `avance_fisico` (
 --
 
 INSERT INTO `avance_fisico` (`id`, `id_proyecto`, `fecha`, `avance_real`, `avance_planificado`, `puntos_atencion`) VALUES
-(16, 1, '2025-02-10', '10', '20', 'ningundo'),
-(17, 2, '2025-02-10', '10', '10', 'ninguno'),
-(18, 1, '2025-02-10', '11.5', '30', 'ninguno'),
-(19, 1, '2025-02-10', '35', '50', 'ninguno'),
-(20, 2, '2025-02-10', '35', '40', 'ninguno'),
-(21, 1, '2025-02-10', '50', '60', 'ninguno'),
-(22, 1, '2025-02-11', '60', '70', 'ninguno'),
-(23, 10, '2025-02-11', '10', '20', 'ninguno'),
-(24, 15, '2025-02-11', '35', '40', 'ninguno');
+(36, 25, '2025-02-17', '10', '20', 'ninguno'),
+(37, 25, '2025-02-17', '11', '20', 'ninguno'),
+(38, 26, '2025-02-18', '10', '20', 'ninguno'),
+(39, 28, '2025-02-18', '10', '20', 'ninguno'),
+(40, 28, '2025-02-18', '20', '30', 'ninguno');
 
 -- --------------------------------------------------------
 
@@ -114,12 +107,37 @@ CREATE TABLE `clientes` (
 --
 
 INSERT INTO `clientes` (`id`, `nombre`, `email`, `telefono`, `direccion`, `unidad_negocio`, `razon_social`, `nombre_comercial`, `direccion_fiscal`, `pais`, `id_region`) VALUES
-(1, 'Empresa A', 'contacto@empresaA.com', '123456789', 'Calle 123, Ciudad A', 'Tecnología', 'Empresa A S.A.', 'EmpA', 'Av. Central 456', 'México', 1),
-(2, 'Empresa B', 'info@empresaB.com', '987654321', 'Avenida 456, Ciudad B', 'Construcción', 'Empresa B S.A.', 'EmpB', 'Calle Industrial 789', 'Argentina', 2),
-(3, 'Empresa C', 'soporte@empresaC.com', '1122334455', 'Carrera 789, Ciudad C', 'Finanzas', 'Empresa C S.A.', 'EmpC', 'Zona Empresarial 101', 'Colombia', 3),
 (4, 'Cliente Ejemplo', 'cliente@example.com', '1234567890', 'Calle Secundaria, Zona', 'Unidad 1', 'Ejemplo SA', 'Ejemplo Comercial', 'Av. Principal, Ciudad', 'Venezuela', 1),
-(5, 'Constructora Futuro', 'contacto@futuro.com', '0212-1234567', 'Calle Principal, Zona Industrial', 'Construcción Civil', 'Constructora Futuro SA', 'Futuro Construcciones', 'Av. Bolívar, Edificio Torre Futuro, Piso 5', 'Venezuela', 3),
-(6, 'richarson', 'richarsonmartine@gmail.com', '04127433277', 'carabobo', 'comprar', 'nada', 'algo', 'guacara', 'venezuela', 1);
+(7, 'RICHARSON', 'admin@example.com', '00000000', 'algo', 'unidad 2', 'cliente', 'cliente', 'cliente', 'venezuela', 2),
+(8, 'RICHARSON2', 'admin@example.com', '00000000', 'algo', 'unidad 2', 'cliente', 'cliente', 'cliente', 'venezuela', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `costos_proyectos`
+--
+
+CREATE TABLE `costos_proyectos` (
+  `id` int NOT NULL,
+  `id_proyecto` int NOT NULL,
+  `fecha` date NOT NULL,
+  `costo` decimal(10,2) NOT NULL,
+  `monto_sobrepasado` decimal(10,2) DEFAULT '0.00'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `costos_proyectos`
+--
+
+INSERT INTO `costos_proyectos` (`id`, `id_proyecto`, `fecha`, `costo`, `monto_sobrepasado`) VALUES
+(3, 26, '2025-02-18', 100.00, 0.00),
+(4, 26, '2025-02-18', 900.00, 0.00),
+(5, 26, '2025-02-18', 100.00, 100.00),
+(6, 26, '2025-02-18', 500.00, 600.00),
+(7, 26, '2025-02-18', 100.00, 700.00),
+(8, 26, '2025-02-18', 50.00, 750.00),
+(9, 25, '2025-02-18', 100.00, 0.00),
+(10, 25, '2025-02-18', 1000.00, 100.00);
 
 -- --------------------------------------------------------
 
@@ -174,22 +192,13 @@ CREATE TABLE `proyectos` (
 --
 
 INSERT INTO `proyectos` (`id`, `numero`, `nombre`, `id_cliente`, `id_responsable`, `id_region`, `id_contrato`, `costo_estimado`, `monto_ofertado`, `fecha_inicio`, `fecha_final`, `duracion`, `id_estatus`) VALUES
-(1, 'P001', 'Sistema de Gestión', 1, 1, 1, 'C-1001', 50000.00, 60000.00, '2024-03-01', '2024-08-30', 180, 1),
-(2, 'P002', 'Desarrollo de Plataforma Web', 2, 2, 2, 'C-1002', 75000.00, 90000.00, '2024-05-15', '2024-12-20', 220, 2),
-(4, 'PROY-001', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-10-01', '2024-10-01', 23, 5),
-(6, 'PROY-002', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-10-01', '2024-10-01', 365, 1),
-(7, 'PROY-008', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-09-30', '2024-09-30', 366, 1),
-(9, 'PROY-009', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-09-30', '2024-09-30', 366, 5),
-(10, 'PROY-004', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-09-30', '2024-09-30', 366, 5),
-(11, 'PROY-0019', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-09-30', '2024-09-30', 366, 5),
-(12, 'PROY-0020', 'Proyecto de Construcción', 5, 1, 1, NULL, 10000.00, 566667.00, '2025-02-11', '2025-02-18', 7, 5),
-(13, 'PROY-0021', 'Proyecto de Construcción', 5, 1, 3, NULL, 10000.20, 100000.20, '2025-02-12', '2025-03-07', 23, 5),
-(15, 'PROY-0024', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-09-30', '2024-09-30', 366, 5),
-(16, 'PROY-002222', 'Proyecto de Construcciónwq', 5, 1, 3, NULL, 1000.00, 134344.00, '2025-02-11', '2025-02-26', 15, 1),
-(17, 'PROY-0022222', 'Proyecto de Construcciónwq', 5, 2, 2, NULL, 1000.00, 343434.00, '2025-02-11', '2025-02-26', 15, 1),
-(19, 'PROY-00222222', 'Proyecto de Construcciónwq', 5, 2, 2, NULL, 10000.00, 342342.00, '2025-02-11', '2025-02-26', 15, 1),
-(21, 'PROY-00212121', 'Proyecto de Construcción', 1, 2, 3, NULL, 500000.00, 600000.00, '2023-09-30', '2024-09-30', 366, 1),
-(22, 'PROY-00222222112', 'Proyecto de Construcción', 6, 2, 2, NULL, 12121.00, 211212.00, '2025-02-20', '2025-02-25', 5, 1);
+(25, '0001', 'Proyecto de web', 4, 2, 1, NULL, 1000.00, 1000.00, '2025-02-18', '2025-02-25', 7, 1),
+(26, '0002', 'Proyecto de Web 2', 4, 2, 2, NULL, 1000.00, 1000.00, '2025-02-18', '2025-02-25', 7, 1),
+(27, '0003', 'Proyecto de Web 3', 4, 2, 3, NULL, 1000.00, 1000.00, '2025-02-26', '2025-03-07', 9, 1),
+(28, 'PROY-0021', 'Proyecto de Web 4', 4, 2, 1, NULL, 1000.00, 12000.00, '2025-02-26', '2025-03-05', 7, 1),
+(29, 'PROY-0026', 'Proyecto de web 5', 4, 2, 2, NULL, 12000.00, 10000.00, '2025-02-27', '2025-03-07', 8, 1),
+(30, 'PROY-0024', 'Proyecto de Web 6', 4, 2, 2, NULL, 12000.00, 1000.00, '2025-02-25', '2025-03-07', 10, 1),
+(31, 'PROY-0027', 'Proyecto de web 7', 4, 2, 3, NULL, 3000.00, 2500.00, '2025-02-24', '2025-03-07', 11, 1);
 
 -- --------------------------------------------------------
 
@@ -259,6 +268,13 @@ ALTER TABLE `clientes`
   ADD KEY `fk_clientes_region` (`id_region`);
 
 --
+-- Indexes for table `costos_proyectos`
+--
+ALTER TABLE `costos_proyectos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_proyecto` (`id_proyecto`);
+
+--
 -- Indexes for table `estatus_proceso`
 --
 ALTER TABLE `estatus_proceso`
@@ -295,19 +311,25 @@ ALTER TABLE `responsables`
 -- AUTO_INCREMENT for table `avance_financiero`
 --
 ALTER TABLE `avance_financiero`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `avance_fisico`
 --
 ALTER TABLE `avance_fisico`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `costos_proyectos`
+--
+ALTER TABLE `costos_proyectos`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `estatus_proceso`
@@ -319,7 +341,7 @@ ALTER TABLE `estatus_proceso`
 -- AUTO_INCREMENT for table `proyectos`
 --
 ALTER TABLE `proyectos`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `regiones`
@@ -355,6 +377,12 @@ ALTER TABLE `avance_fisico`
 --
 ALTER TABLE `clientes`
   ADD CONSTRAINT `fk_clientes_region` FOREIGN KEY (`id_region`) REFERENCES `regiones` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `costos_proyectos`
+--
+ALTER TABLE `costos_proyectos`
+  ADD CONSTRAINT `costos_proyectos_ibfk_1` FOREIGN KEY (`id_proyecto`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `proyectos`
