@@ -34,13 +34,15 @@ export const getCostosByProyecto = async (req, res) => {
         id,
         fecha,
         costo,
-        monto_sobrepasado
+        monto_sobrepasado,
+        fecha_inicio,
+        fecha_fin
       FROM 
         costos_proyectos
       WHERE 
         id_proyecto = ?
       ORDER BY 
-        fecha DESC
+        id DESC
       `,
       [id]
     );
@@ -57,13 +59,15 @@ export const getCostosByProyecto = async (req, res) => {
       message: "Ocurrió un error al procesar la solicitud.",
     });
   }
-}; export const createCostos = async (req, res) => {
+};
+
+export const createCostos = async (req, res) => {
   try {
     // Extraer los datos del cuerpo de la solicitud
-    const { id_proyecto, fecha, costo, monto_sobrepasado } = req.body;
+    const { id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin } = req.body;
 
     // Validar que los campos obligatorios estén presentes
-    if (!id_proyecto || !fecha || !costo) {
+    if (!id_proyecto || !fecha || !costo || !fecha_inicio || !fecha_fin) {
       return res.status(400).json({
         message: "Todos los campos son obligatorios: id_proyecto, fecha y costo.",
       });
@@ -98,8 +102,8 @@ export const getCostosByProyecto = async (req, res) => {
 
     // Insertar el nuevo costo en la base de datos
     const [result] = await pool.query(
-      "INSERT INTO costos_proyectos (id_proyecto, fecha, costo, monto_sobrepasado) VALUES (?, ?, ?, ?)",
-      [id_proyecto, fecha, costoNumerico, sobrecostoNumerico]
+      "INSERT INTO costos_proyectos (id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?, ?, ?)",
+      [id_proyecto, fecha, costoNumerico, sobrecostoNumerico, fecha_inicio, fecha_fin]
     );
 
     // Devolver una respuesta exitosa con el ID del nuevo registro

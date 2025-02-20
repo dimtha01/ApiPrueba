@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 18, 2025 at 04:57 PM
+-- Generation Time: Feb 20, 2025 at 07:47 AM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.16
 
@@ -36,25 +36,17 @@ CREATE TABLE `avance_financiero` (
   `numero_factura` varchar(50) DEFAULT NULL,
   `ofertado` decimal(15,2) DEFAULT NULL,
   `costo_planificado` decimal(15,2) DEFAULT NULL,
-  `id_estatus_proceso` int DEFAULT NULL
+  `id_estatus_proceso` int DEFAULT NULL,
+  `fecha_inicio` date DEFAULT NULL,
+  `fecha_fin` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `avance_financiero`
 --
 
-INSERT INTO `avance_financiero` (`id`, `id_proyecto`, `fecha`, `numero_valuacion`, `monto_usd`, `numero_factura`, `ofertado`, `costo_planificado`, `id_estatus_proceso`) VALUES
-(15, 25, '2025-02-17', '0001', 100.00, NULL, NULL, NULL, 5),
-(16, 25, '2025-02-17', '0002', 100.00, NULL, NULL, NULL, 5),
-(17, 25, '2025-02-17', '0003', 100.00, NULL, NULL, NULL, 4),
-(18, 26, '2025-02-17', '0001', 100.00, 'f-1233', NULL, NULL, 6),
-(19, 26, '2025-02-17', '0002', 100.00, NULL, NULL, NULL, 5),
-(20, 26, '2025-02-17', '0003', 100.00, 'f-1233', NULL, NULL, 6),
-(21, 27, '2025-02-17', '0001', 1000.00, NULL, NULL, NULL, 4),
-(22, 25, '2025-02-17', '0006', 100.02, NULL, NULL, NULL, 4),
-(23, 25, '2025-02-17', '0010', 100.00, 'f-1233', NULL, NULL, 6),
-(24, 26, '2025-02-17', '0004', 100.00, NULL, NULL, NULL, 4),
-(25, 28, '2025-02-18', '0001', 1000.00, NULL, NULL, NULL, 4);
+INSERT INTO `avance_financiero` (`id`, `id_proyecto`, `fecha`, `numero_valuacion`, `monto_usd`, `numero_factura`, `ofertado`, `costo_planificado`, `id_estatus_proceso`, `fecha_inicio`, `fecha_fin`) VALUES
+(1, 26, '2025-02-20', '0001', 1000.00, 'f-21211', NULL, NULL, 6, '2025-02-20', '2025-02-21');
 
 -- --------------------------------------------------------
 
@@ -68,19 +60,18 @@ CREATE TABLE `avance_fisico` (
   `fecha` date DEFAULT NULL,
   `avance_real` varchar(255) DEFAULT NULL,
   `avance_planificado` varchar(255) DEFAULT NULL,
-  `puntos_atencion` text
+  `puntos_atencion` text,
+  `fecha_inicio` datetime DEFAULT NULL,
+  `fecha_fin` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `avance_fisico`
 --
 
-INSERT INTO `avance_fisico` (`id`, `id_proyecto`, `fecha`, `avance_real`, `avance_planificado`, `puntos_atencion`) VALUES
-(36, 25, '2025-02-17', '10', '20', 'ninguno'),
-(37, 25, '2025-02-17', '11', '20', 'ninguno'),
-(38, 26, '2025-02-18', '10', '20', 'ninguno'),
-(39, 28, '2025-02-18', '10', '20', 'ninguno'),
-(40, 28, '2025-02-18', '20', '30', 'ninguno');
+INSERT INTO `avance_fisico` (`id`, `id_proyecto`, `fecha`, `avance_real`, `avance_planificado`, `puntos_atencion`, `fecha_inicio`, `fecha_fin`) VALUES
+(1, 26, '2025-02-20', '10', '20', 'ninguno', '2025-02-20 00:00:00', '2025-02-21 00:00:00'),
+(2, 26, '2025-02-20', '10', '20', 'ninguno', '2025-02-20 00:00:00', '2025-02-28 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -122,22 +113,18 @@ CREATE TABLE `costos_proyectos` (
   `id_proyecto` int NOT NULL,
   `fecha` date NOT NULL,
   `costo` decimal(10,2) NOT NULL,
-  `monto_sobrepasado` decimal(10,2) DEFAULT '0.00'
+  `monto_sobrepasado` decimal(10,2) DEFAULT '0.00',
+  `fecha_inicio` datetime DEFAULT NULL,
+  `fecha_fin` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `costos_proyectos`
 --
 
-INSERT INTO `costos_proyectos` (`id`, `id_proyecto`, `fecha`, `costo`, `monto_sobrepasado`) VALUES
-(3, 26, '2025-02-18', 100.00, 0.00),
-(4, 26, '2025-02-18', 900.00, 0.00),
-(5, 26, '2025-02-18', 100.00, 100.00),
-(6, 26, '2025-02-18', 500.00, 600.00),
-(7, 26, '2025-02-18', 100.00, 700.00),
-(8, 26, '2025-02-18', 50.00, 750.00),
-(9, 25, '2025-02-18', 100.00, 0.00),
-(10, 25, '2025-02-18', 1000.00, 100.00);
+INSERT INTO `costos_proyectos` (`id`, `id_proyecto`, `fecha`, `costo`, `monto_sobrepasado`, `fecha_inicio`, `fecha_fin`) VALUES
+(1, 26, '2025-02-20', 100.00, 0.00, '2025-02-20 00:00:00', '2025-02-28 00:00:00'),
+(2, 26, '2025-02-20', 1000.00, 100.00, '2025-02-20 00:00:00', '2025-02-28 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -311,13 +298,13 @@ ALTER TABLE `responsables`
 -- AUTO_INCREMENT for table `avance_financiero`
 --
 ALTER TABLE `avance_financiero`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `avance_fisico`
 --
 ALTER TABLE `avance_fisico`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `clientes`
@@ -329,7 +316,7 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT for table `costos_proyectos`
 --
 ALTER TABLE `costos_proyectos`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `estatus_proceso`

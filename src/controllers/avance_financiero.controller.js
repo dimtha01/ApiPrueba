@@ -1,5 +1,6 @@
 import { pool } from "../db.js";
 
+// Obtener todos los avances financieros
 export const getAvanceFinanciero = async (req, res) => {
   try {
     // Ejecutar la consulta SQL
@@ -11,6 +12,8 @@ export const getAvanceFinanciero = async (req, res) => {
         af.numero_valuacion,
         af.monto_usd,
         af.numero_factura,
+        af.fecha_inicio,
+        af.fecha_fin,
         ep.nombre_estatus AS estatus_proceso_nombre,
         ep.descripcion AS estatus_proceso_descripcion
       FROM 
@@ -20,12 +23,10 @@ export const getAvanceFinanciero = async (req, res) => {
       ON 
         af.id_estatus_proceso = ep.id_estatus;
     `);
-
     // Verificar si hay resultados
     if (rows.length === 0) {
       return res.status(404).json({ message: "No se encontraron registros de avance financiero" });
     }
-
     // Devolver los resultados
     res.json(rows);
   } catch (error) {
@@ -34,11 +35,12 @@ export const getAvanceFinanciero = async (req, res) => {
     return res.status(500).json({ message: "Algo salió mal", error: error.message });
   }
 };
+
+// Obtener avances financieros por ID de proyecto
 export const getAvanceFinancieroByProyectoId = async (req, res) => {
   try {
     // Obtener el ID del proyecto desde los parámetros de la URL
     const id_proyecto = req.params;
-
     // Ejecutar la consulta SQL con filtro por id_proyecto
     const [rows] = await pool.query(
       `
@@ -49,6 +51,8 @@ export const getAvanceFinancieroByProyectoId = async (req, res) => {
         af.numero_valuacion,
         af.monto_usd,
         af.numero_factura,
+        af.fecha_inicio,
+        af.fecha_fin,
         ep.nombre_estatus AS estatus_proceso_nombre,
         ep.descripcion AS estatus_proceso_descripcion
       FROM 
@@ -62,12 +66,10 @@ export const getAvanceFinancieroByProyectoId = async (req, res) => {
     `,
       [id_proyecto.id]
     );
-
     // Verificar si hay resultados
     if (rows.length === 0) {
       return res.status(200).json([]);
     }
-
     // Devolver los resultados
     res.json(rows);
   } catch (error) {
@@ -76,6 +78,8 @@ export const getAvanceFinancieroByProyectoId = async (req, res) => {
     return res.status(500).json({ message: "Algo salió mal", error: error.message });
   }
 };
+
+// Crear un nuevo registro de avance financiero
 export const createAvanceFinanciero = async (req, res) => {
   try {
     // Extraer los datos del cuerpo de la solicitud
@@ -86,6 +90,8 @@ export const createAvanceFinanciero = async (req, res) => {
       monto_usd,
       numero_factura,
       id_estatus_proceso,
+      fecha_inicio,
+      fecha_fin,
     } = req.body;
 
     // Validar que todos los campos requeridos estén presentes
@@ -94,7 +100,9 @@ export const createAvanceFinanciero = async (req, res) => {
       !fecha ||
       !numero_valuacion ||
       !monto_usd ||
-      !id_estatus_proceso
+      !id_estatus_proceso ||
+      !fecha_inicio ||
+      !fecha_fin
     ) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
@@ -108,8 +116,10 @@ export const createAvanceFinanciero = async (req, res) => {
         numero_valuacion,
         monto_usd,
         numero_factura,
-        id_estatus_proceso
-      ) VALUES (?, ?, ?, ?, ?, ?);
+        id_estatus_proceso,
+        fecha_inicio,
+        fecha_fin
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     `,
       [
         id_proyecto,
@@ -118,6 +128,8 @@ export const createAvanceFinanciero = async (req, res) => {
         monto_usd,
         numero_factura || null,
         id_estatus_proceso,
+        fecha_inicio,
+        fecha_fin,
       ]
     );
 
@@ -137,10 +149,12 @@ export const createAvanceFinanciero = async (req, res) => {
     return res.status(500).json({ message: "Algo salió mal", error: error.message });
   }
 };
+
+// Actualizar el estado del avance financiero
 export const updateEstatusAvanceFinanciero = async (req, res) => {
   try {
     // Extraer los datos del cuerpo de la solicitud
-    const { id_estatus_proceso, numero_factura } = req.body;
+    const { id_estatus_proceso, numero_factura, fecha_inicio, fecha_fin } = req.body;
     // Extraer el ID del avance financiero desde los parámetros de la ruta
     const idAvanceFinanciero = req.params.id;
 
@@ -162,6 +176,16 @@ export const updateEstatusAvanceFinanciero = async (req, res) => {
       queryParams.push(numero_factura);
     }
 
+    // Si se proporcionan fechas de inicio o fin, agregarlas a la consulta
+    if (fecha_inicio) {
+      query += `, fecha_inicio = ?`;
+      queryParams.push(fecha_inicio);
+    }
+    if (fecha_fin) {
+      query += `, fecha_fin = ?`;
+      queryParams.push(fecha_fin);
+    }
+
     query += ` WHERE id = ?`;
     queryParams.push(idAvanceFinanciero);
 
@@ -178,7 +202,9 @@ export const updateEstatusAvanceFinanciero = async (req, res) => {
       message: "Estado del avance financiero actualizado exitosamente",
       updatedId: idAvanceFinanciero,
       newStatusId: id_estatus_proceso,
-      numeroFactura: numero_factura || "No proporcionado", // Indica si se actualizó o no el número de factura
+      numeroFactura: numero_factura || "No proporcionado",
+      fechaInicio: fecha_inicio || "No actualizada",
+      fechaFin: fecha_fin || "No actualizada",
     });
   } catch (error) {
     // Manejar errores

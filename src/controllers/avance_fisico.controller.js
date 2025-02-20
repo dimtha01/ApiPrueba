@@ -1,17 +1,20 @@
 import { pool } from "../db.js";
 
+// Obtener todos los avances físicos con información del proyecto
 export const getAvanceFisico = async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
-	af.id,
-    p.nombre,
-    af.fecha,avance_real,
-    af.avance_planificado,
-    af.puntos_atencion 
-FROM avance_fisico  af 
-INNER JOIN proyectos p ON
-	af.id_proyecto = p.id;
+        af.id,
+        p.nombre AS nombre_proyecto,
+        af.fecha,
+        af.avance_real,
+        af.avance_planificado,
+        af.puntos_atencion,
+        af.fecha_inicio,
+        af.fecha_fin
+      FROM avance_fisico af
+      INNER JOIN proyectos p ON af.id_proyecto = p.id;
     `);
     res.json(rows);
   } catch (error) {
@@ -19,22 +22,23 @@ INNER JOIN proyectos p ON
   }
 };
 
+// Crear un nuevo registro de avance físico
 export const createAvanceFisico = async (req, res) => {
   try {
-    const { id_proyecto, fecha, avance_real, avance_planificado, puntos_atencion } = req.body;
+    const { id_proyecto, fecha, avance_real, avance_planificado, puntos_atencion, fecha_inicio, fecha_fin } = req.body;
 
     // Validar que todos los campos obligatorios estén presentes
-    if (!id_proyecto || !fecha || !avance_real || !avance_planificado || !puntos_atencion) {
+    if (!id_proyecto || !fecha || !avance_real || !avance_planificado || !puntos_atencion || !fecha_inicio || !fecha_fin) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
 
     // Insertar el nuevo registro en la base de datos
     const [result] = await pool.query(
       `
-      INSERT INTO avance_fisico (id_proyecto, fecha, avance_real, avance_planificado, puntos_atencion)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO avance_fisico (id_proyecto, fecha, avance_real, avance_planificado, puntos_atencion, fecha_inicio, fecha_fin)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
-      [id_proyecto, fecha, avance_real, avance_planificado, puntos_atencion]
+      [id_proyecto, fecha, avance_real, avance_planificado, puntos_atencion, fecha_inicio, fecha_fin]
     );
 
     // Devolver el ID del nuevo registro creado
@@ -45,6 +49,8 @@ export const createAvanceFisico = async (req, res) => {
       avance_real,
       avance_planificado,
       puntos_atencion,
+      fecha_inicio,
+      fecha_fin,
       message: "Registro de avance físico creado exitosamente",
     });
   } catch (error) {
@@ -53,6 +59,7 @@ export const createAvanceFisico = async (req, res) => {
   }
 };
 
+// Obtener avances físicos por ID de proyecto con fechas de inicio y fin
 export const getAvanceFisicoByProyectoId = async (req, res) => {
   try {
     const id_proyecto = req.params; // Obtener el ID del proyecto desde la URL
@@ -68,7 +75,8 @@ export const getAvanceFisicoByProyectoId = async (req, res) => {
         af.avance_real,
         af.avance_planificado,
         af.puntos_atencion,
-        p.monto_ofertado
+        af.fecha_inicio,
+        af.fecha_fin
       FROM avance_fisico af
       INNER JOIN proyectos p ON af.id_proyecto = p.id
       WHERE af.id_proyecto = ?
