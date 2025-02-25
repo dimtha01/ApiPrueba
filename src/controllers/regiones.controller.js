@@ -2,7 +2,6 @@ import { pool } from "../db.js";
 
 export const getRegiones = async (req, res) => {
   try {
-    // Consulta para obtener el costo planificado total y el costo real total
     const [proyectoResult] = await pool.query(
       `
     SELECT 
