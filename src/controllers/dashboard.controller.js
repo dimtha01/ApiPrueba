@@ -4,27 +4,24 @@ export const getDashboardRegion = async (req, res) => {
     try {
         const { region } = req.params; // Obtiene el nombre de la región desde los parámetros de la URL
 
-        // Consulta para obtener el costo total por región
         const [rows] = await pool.query(
             `
       SELECT
+        P.id AS id_proyecto,
+        P.nombre AS nombre_proyecto,
+        P.costo_estimado AS costo_planificado,
+        P.monto_ofertado,
         R.nombre AS region,
-        COUNT(P.id) AS total_proyectos,
-        COALESCE(SUM(P.costo_estimado), 0) AS costo_planificado_total,
-        COALESCE(SUM(CP.costo), 0) AS costo_real_total,
+        COALESCE(SUM(CP.costo), 0) AS costo_real, -- Suma de los costos reales por proyecto
         SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS monto_por_valuar,
         SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS monto_por_facturar,
         SUM(CASE WHEN AV.id_estatus_proceso = 6 THEN AV.monto_usd ELSE 0 END) AS monto_facturado,
-        MAX(AF.avance_real) AS avance_real_promedio,
-        MAX(AF.avance_planificado) AS avance_planificado_promedio
+        MAX(AF.avance_real) AS avance_real, -- Usamos MAX para evitar problemas
+        MAX(AF.avance_planificado) AS avance_planificado -- Usamos MAX para evitar problemas
       FROM 
-        regiones R
+        proyectos P
       LEFT JOIN 
-        proyectos P ON R.id = P.id_region
-      LEFT JOIN 
-        costos_proyectos CP ON P.id = CP.id_proyecto
-      LEFT JOIN 
-        avance_financiero AV ON P.id = AV.id_proyecto
+        avance_financiero AV ON AV.id_proyecto = P.id
       LEFT JOIN 
         (
           SELECT 
@@ -37,12 +34,16 @@ export const getDashboardRegion = async (req, res) => {
         ) UltimoAF ON P.id = UltimoAF.id_proyecto
       LEFT JOIN 
         avance_fisico AF ON AF.id = UltimoAF.ultimo_id
+      LEFT JOIN 
+        regiones R ON P.id_region = R.id
+      LEFT JOIN 
+        costos_proyectos CP ON P.id = CP.id_proyecto -- Unión con la tabla de costos reales
       WHERE 
         R.nombre = ?
-      GROUP BY 
-        R.nombre
-      ORDER BY 
-        R.nombre;
+      GROUP BY
+        P.id, P.nombre, R.nombre
+      ORDER BY
+        P.id;
     `,
             [region] // Parámetro para evitar inyecciones SQL
         );
