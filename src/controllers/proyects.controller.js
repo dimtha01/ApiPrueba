@@ -51,13 +51,15 @@ export const getProyectoById = async (req, res) => {
     p.fecha_final,
     p.duracion,
     MAX(af.avance_real) AS avance_real_maximo,
-    MAX(af.avance_planificado) AS avance_planificado_maximo
+    MAX(af.avance_planificado) AS avance_planificado_maximo,
+    COALESCE(SUM(cp.costo), 0) AS costo_real_total -- Suma de los costos reales
 FROM 
     proyectos p
     LEFT JOIN clientes c ON p.id_cliente = c.id
     LEFT JOIN responsables r ON p.id_responsable = r.id
     LEFT JOIN regiones reg ON p.id_region = reg.id
     LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+    LEFT JOIN costos_proyectos cp ON p.id = cp.id_proyecto -- Unión con la tabla de costos reales
 WHERE 
     p.id = ?
 GROUP BY 
