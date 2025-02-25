@@ -58,11 +58,11 @@ FROM
     LEFT JOIN responsables r ON p.id_responsable = r.id
     LEFT JOIN regiones reg ON p.id_region = reg.id
     LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+WHERE 
+    p.id = ?
 GROUP BY 
     p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
-    p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion
-      WHERE 
-        p.id = ?
+    p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
     `, params.id);
     if (rows.length === 0) {
       return res.status(404).json({ message: "Proyecto no encontrado" });
