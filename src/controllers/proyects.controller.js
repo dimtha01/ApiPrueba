@@ -3,24 +3,30 @@ import { pool } from "../db.js";
 export const getProyects = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-        SELECT 
-  p.id,
-  p.numero,
-  p.nombre AS nombre_proyecto,
-  c.nombre AS nombre_cliente,
-  r.nombre AS nombre_responsable,
-  reg.nombre AS nombre_region,
-  c.unidad_negocio as unidad_negocio,
-  p.costo_estimado,
-  p.monto_ofertado,
-  p.fecha_inicio,
-  p.fecha_final,
-  p.duracion
+       SELECT 
+    p.id,
+    p.numero,
+    p.nombre AS nombre_proyecto,
+    c.nombre AS nombre_cliente,
+    r.nombre AS nombre_responsable,
+    reg.nombre AS nombre_region,
+    c.unidad_negocio AS unidad_negocio,
+    p.costo_estimado,
+    p.monto_ofertado,
+    p.fecha_inicio,
+    p.fecha_final,
+    p.duracion,
+    MAX(af.avance_real) AS avance_real_maximo,
+    MAX(af.avance_planificado) AS avance_planificado_maximo
 FROM 
-  proyectos p
-  LEFT JOIN clientes c ON p.id_cliente = c.id
-  LEFT JOIN responsables r ON p.id_responsable = r.id
-  LEFT JOIN regiones reg ON p.id_region = reg.id
+    proyectos p
+    LEFT JOIN clientes c ON p.id_cliente = c.id
+    LEFT JOIN responsables r ON p.id_responsable = r.id
+    LEFT JOIN regiones reg ON p.id_region = reg.id
+    LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+GROUP BY 
+    p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
+    p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
     `);
     res.json(rows);
   } catch (error) {
@@ -31,24 +37,30 @@ export const getProyectoById = async (req, res) => {
   try {
     const params = req.params;
     const [rows] = await pool.query(`
-      SELECT 
-        p.id,
-        p.numero,
-        p.nombre AS nombre_proyecto,
-        c.nombre AS nombre_cliente,
-        r.nombre AS nombre_responsable,
-        reg.nombre AS nombre_region,
-        c.unidad_negocio as unidad_negocio,
-        p.costo_estimado,
-        p.monto_ofertado,
-        p.fecha_inicio,
-        p.fecha_final,
-        p.duracion
-      FROM 
-        proyectos p
-        LEFT JOIN clientes c ON p.id_cliente = c.id
-        LEFT JOIN responsables r ON p.id_responsable = r.id
-        LEFT JOIN regiones reg ON p.id_region = reg.id
+     SELECT 
+    p.id,
+    p.numero,
+    p.nombre AS nombre_proyecto,
+    c.nombre AS nombre_cliente,
+    r.nombre AS nombre_responsable,
+    reg.nombre AS nombre_region,
+    c.unidad_negocio AS unidad_negocio,
+    p.costo_estimado,
+    p.monto_ofertado,
+    p.fecha_inicio,
+    p.fecha_final,
+    p.duracion,
+    MAX(af.avance_real) AS avance_real_maximo,
+    MAX(af.avance_planificado) AS avance_planificado_maximo
+FROM 
+    proyectos p
+    LEFT JOIN clientes c ON p.id_cliente = c.id
+    LEFT JOIN responsables r ON p.id_responsable = r.id
+    LEFT JOIN regiones reg ON p.id_region = reg.id
+    LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+GROUP BY 
+    p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
+    p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion
       WHERE 
         p.id = ?
     `, params.id);
