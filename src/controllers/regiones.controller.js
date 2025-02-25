@@ -5,13 +5,22 @@ export const getRegiones = async (req, res) => {
     // Consulta para obtener el costo planificado total y el costo real total
     const [proyectoResult] = await pool.query(
       `
-     SELECT 
-          SUM(p.costo_estimado) AS costo_planificado_total,
-          SUM(cp.costo) AS costo_real_total
-      FROM 
-          proyectos p
-      INNER JOIN 
-          costos_proyectos cp ON p.id = cp.id_proyecto;
+    SELECT 
+    SUM(costo_planificado_total) AS costo_planificado_total,
+    SUM(costo_real_total) AS costo_real_total
+FROM 
+    (
+        SELECT 
+            p.id AS id_proyecto,
+            p.costo_estimado AS costo_planificado_total,
+            SUM(cp.costo) AS costo_real_total
+        FROM 
+            proyectos p
+        LEFT JOIN 
+            costos_proyectos cp ON p.id = cp.id_proyecto
+        GROUP BY 
+            p.id, p.costo_estimado
+    ) subquery;
       `
     );
 
