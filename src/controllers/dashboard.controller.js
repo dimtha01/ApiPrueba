@@ -1,11 +1,19 @@
 import { pool } from "../db.js";
 
 export const getDashboardRegion = async (req, res) => {
-  try {
-    const { region } = req.params; // Obtiene el nombre de la región desde los parámetros de la URL
-
-    const [rows] = await pool.query(
-      `
+    try {
+        const { region } = req.params; // Obtiene el nombre de la región desde los parámetros de la URL
+        const [proyectoResult] = await pool.query(
+            `SELECT 
+    SUM(p.costo_estimado) AS costo_planificado_total,
+    SUM(cp.costo) AS costo_real_total
+FROM 
+    proyectos p
+INNER JOIN 
+    costos_proyectos cp ON p.id = cp.id_proyecto;`
+        );
+        const [rows] = await pool.query(
+            `
       SELECT
     P.id AS id_proyecto,
     P.nombre AS nombre_proyecto,
@@ -50,18 +58,18 @@ GROUP BY
 ORDER BY
     P.id;
     `,
-      [region] // Parámetro para evitar inyecciones SQL
-    );
+            [region] // Parámetro para evitar inyecciones SQL
+        );
 
-    // Verificar si se encontraron resultados
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "No se encontraron proyectos para la región especificada." });
+        // Verificar si se encontraron resultados
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "No se encontraron proyectos para la región especificada." });
+        }
+
+        // Devolver los resultados en formato JSON
+        res.json(rows);
+    } catch (error) {
+        console.error("Error al ejecutar la consulta:", error);
+        res.status(500).json({ message: "Ocurrió un error al procesar la solicitud." });
     }
-
-    // Devolver los resultados en formato JSON
-    res.json(rows);
-  } catch (error) {
-    console.error("Error al ejecutar la consulta:", error);
-    res.status(500).json({ message: "Ocurrió un error al procesar la solicitud." });
-  }
 };
