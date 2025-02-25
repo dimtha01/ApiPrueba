@@ -25,22 +25,30 @@ FROM
 
     // Consulta para obtener los detalles por región
     const [rows] = await pool.query(`
-       SELECT 
-          r.nombre AS nombre_region,
-          COUNT(p.id) AS total_proyectos,
-          COALESCE(SUM(p.monto_ofertado), 0) AS total_monto_ofertado,
-          COALESCE(SUM(p.costo_estimado), 0) AS total_costo_planificado, -- Costo planificado por región
-          COALESCE(SUM(cp.costo), 0) AS total_costo_real -- Costo real por región
-       FROM 
-          regiones r
-       LEFT JOIN 
-          proyectos p ON r.id = p.id_region
-       LEFT JOIN 
-          costos_proyectos cp ON p.id = cp.id_proyecto
-       GROUP BY 
-          r.id, r.nombre
-       ORDER BY 
-          total_monto_ofertado DESC;
+      SELECT 
+    r.nombre AS nombre_region,
+    COUNT(DISTINCT p.id) AS total_proyectos, -- Contar proyectos únicos por región
+    COALESCE(SUM(p.monto_ofertado), 0) AS total_monto_ofertado, -- Suma del monto ofertado por región
+    COALESCE(SUM(p.costo_estimado), 0) AS total_costo_planificado, -- Suma del costo planificado por región
+    COALESCE(SUM(cp.total_costo_real), 0) AS total_costo_real -- Suma del costo real por región
+FROM 
+    regiones r
+LEFT JOIN 
+    proyectos p ON r.id = p.id_region
+LEFT JOIN 
+    (
+        SELECT 
+            id_proyecto, 
+            SUM(costo) AS total_costo_real -- Calcular el costo real total por proyecto
+        FROM 
+            costos_proyectos
+        GROUP BY 
+            id_proyecto
+    ) cp ON p.id = cp.id_proyecto
+GROUP BY 
+    r.id, r.nombre -- Agrupar por región
+ORDER BY 
+    total_monto_ofertado DESC; -- Ordenar por monto ofertado (opcional)
     `);
 
     // Extraer los totales globales del resultado de la primera consulta
