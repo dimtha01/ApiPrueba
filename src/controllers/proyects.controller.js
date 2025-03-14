@@ -7,6 +7,7 @@ export const getProyects = async (req, res) => {
     p.id,
     p.numero,
     p.nombre AS nombre_proyecto,
+    p.nombre_cortos,
     c.nombre AS nombre_cliente,
     r.nombre AS nombre_responsable,
     reg.nombre AS nombre_region,
@@ -33,6 +34,7 @@ GROUP BY
     return res.status(500).json({ message: "Something goes wrong" });
   }
 };
+
 export const getProyectoById = async (req, res) => {
   try {
     const params = req.params;
@@ -41,6 +43,7 @@ export const getProyectoById = async (req, res) => {
     p.id,
     p.numero,
     p.nombre AS nombre_proyecto,
+    p.nombre_cortos,
     c.nombre AS nombre_cliente,
     r.nombre AS nombre_responsable,
     reg.nombre AS nombre_region,
@@ -81,6 +84,7 @@ export const postProyect = async (req, res) => {
     const {
       numero,
       nombre,
+      nombreCorto,
       idCliente,
       idResponsable,
       idRegion,
@@ -92,8 +96,8 @@ export const postProyect = async (req, res) => {
       duracion, // Duración es opcional
     } = req.body;
 
-    // Validación básica de campos obligatorios
-    if (!numero || !nombre || !idCliente || !idResponsable || !idRegion) {
+    // // Validación básica de campos obligatorios
+    if (!numero || !nombre || !nombreCorto || !idCliente || !idResponsable || !idRegion) {
       return res.status(400).json({ message: "Faltan campos obligatorios" });
     }
 
@@ -130,6 +134,7 @@ export const postProyect = async (req, res) => {
       INSERT INTO proyectos (
         numero,
         nombre,
+    	nombre_cortos,
         id_cliente,
         id_responsable,
         id_region,
@@ -139,11 +144,12 @@ export const postProyect = async (req, res) => {
         fecha_inicio,
         fecha_final,
         duracion
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         numero,
         nombre,
+        nombreCorto,
         idCliente,
         idResponsable,
         idRegion,
@@ -174,5 +180,118 @@ export const postProyect = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Error al crear el proyecto" });
+  }
+};
+
+export const putProyect = async (req, res) => {
+  try {
+    const { id } = req.params; // ID del proyecto a actualizar
+    const {
+      numero,
+      nombre,
+      nombreCorto,
+      idCliente,
+      idResponsable,
+      idRegion,
+      idContrato,
+      costoEstimado,
+      montoOfertado,
+      fechaInicio,
+      fechaFinal,
+      duracion, // Duración es opcional
+    } = req.body;
+
+    // Validación básica de campos obligatorios
+    if (!numero || !nombre || !nombreCorto || !idCliente || !idResponsable || !idRegion) {
+      return res.status(400).json({ message: "Faltan campos obligatorios" });
+    }
+
+    // Verificar si el proyecto existe en la base de datos
+    const [existingProject] = await pool.query("SELECT * FROM proyectos WHERE id = ?", [id]);
+    if (existingProject.length === 0) {
+      return res.status(404).json({ message: "El proyecto no existe" });
+    }
+
+    // Verificar si el número ya está registrado para otro proyecto
+    const [duplicateNumber] = await pool.query("SELECT * FROM proyectos WHERE numero = ? AND id != ?", [
+      numero,
+      id,
+    ]);
+    if (duplicateNumber.length > 0) {
+      return res.status(400).json({ message: "El número de proyecto ya está registrado para otro proyecto" });
+    }
+
+    // Calcular la duración automáticamente si no se proporciona
+    let duracionCalculada = duracion;
+    if (!duracion && fechaInicio && fechaFinal) {
+      const inicio = new Date(fechaInicio);
+      const final = new Date(fechaFinal);
+
+      // Validar que las fechas sean válidas
+      if (isNaN(inicio.getTime()) || isNaN(final.getTime())) {
+        return res.status(400).json({ message: "Las fechas proporcionadas no son válidas" });
+      }
+
+      // Validar que la fecha de inicio sea anterior a la fecha final
+      if (inicio >= final) {
+        return res.status(400).json({ message: "La fecha de inicio debe ser anterior a la fecha final" });
+      }
+
+      const diferenciaEnMilisegundos = final - inicio;
+      const dias = Math.ceil(diferenciaEnMilisegundos / (1000 * 60 * 60 * 24)); // Diferencia en días
+      duracionCalculada = dias;
+    }
+
+    // Actualizar el proyecto en la tabla `proyectos`
+    await pool.query(
+      `
+      UPDATE proyectos
+      SET 
+        numero = ?,
+        nombre = ?,
+        nombre_cortos = ?,
+        id_cliente = ?,
+        id_responsable = ?,
+        id_region = ?,
+        id_contrato = ?,
+        costo_estimado = ?,
+        monto_ofertado = ?,
+        fecha_inicio = ?,
+        fecha_final = ?,
+        duracion = ?
+      WHERE id = ?
+    `,
+      [
+        numero,
+        nombre,
+        nombreCorto,
+        idCliente,
+        idResponsable,
+        idRegion,
+        idContrato || null, // Convertir a NULL si no se proporciona
+        parseFloat(costoEstimado) || null, // Convertir a número o NULL
+        parseFloat(montoOfertado) || null, // Convertir a número o NULL
+        fechaInicio ? new Date(fechaInicio) : null, // Manejo de fechas
+        fechaFinal ? new Date(fechaFinal) : null, // Manejo de fechas
+        duracionCalculada || null, // Duración calculada o proporcionada
+        id, // ID del proyecto a actualizar
+      ]
+    );
+
+    // Recuperar el proyecto actualizado
+    const [rows] = await pool.query("SELECT * FROM proyectos WHERE id = ?", [id]);
+
+    // Verificar si se recuperó correctamente
+    if (rows.length > 0) {
+      return res.status(200).json({
+        message: "Proyecto actualizado correctamente",
+        data: rows[0], // Devuelve el proyecto actualizado
+      });
+    } else {
+      throw new Error("No se pudo recuperar el proyecto actualizado");
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error al actualizar el proyecto" });
   }
 };

@@ -4,6 +4,7 @@ import {
   createEmployee,
   deleteEmployee,
   getClientes,
+  updateCliente,
   updateEmployee,
 } from "../controllers/clients.controller.js";
 
@@ -14,13 +15,8 @@ router.get("/clientes", getClientes);
 
 // GET An Employee
 router.post("/clientes", createCliente);
+router.put("/clientes/:id", updateCliente);
 
-// DELETE An Employee
-router.delete("/employees/:id", deleteEmployee);
 
-// INSERT An Employee
-router.post("/employees", createEmployee);
-
-router.patch("/employees/:id", updateEmployee);
 
 export default router;
