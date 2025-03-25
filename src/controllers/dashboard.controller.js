@@ -1,8 +1,8 @@
-import { pool } from "../db.js"
+import { pool } from "../db.js";
 
 export const getDashboardRegion = async (req, res) => {
   try {
-    const { region } = req.params // Obtiene el nombre de la región desde los parámetros de la URL
+    const { region } = req.params; // Obtiene el nombre de la región desde los parámetros de la URL
 
     // Consulta para obtener datos detallados por proyecto
     const [projectRows] = await pool.query(
@@ -47,15 +47,42 @@ export const getDashboardRegion = async (req, res) => {
         P.id;
     `,
       [region], // Parámetro para evitar inyecciones SQL
-    )
+    );
 
-    // Consulta para obtener los totales de la región
-    const [totalsRow] = await pool.query(
+    // Consulta para obtener el total_costo_planificado
+    const [totalCostoPlanificadoRow] = await pool.query(
       `
       SELECT
-        R.nombre AS region,
-        SUM(P.monto_ofertado) AS total_ofertado,
-        SUM(P.costo_estimado) AS total_costo_planificado,
+        SUM(P.costo_estimado) AS total_costo_planificado
+      FROM 
+        proyectos P
+      LEFT JOIN 
+        regiones R ON P.id_region = R.id
+      WHERE 
+        R.nombre = ?;
+    `,
+      [region],
+    );
+
+    // Consulta para obtener el total_ofertado
+    const [totalOfertadoRow] = await pool.query(
+      `
+      SELECT
+        SUM(P.monto_ofertado) AS total_ofertado
+      FROM 
+        proyectos P
+      LEFT JOIN 
+        regiones R ON P.id_region = R.id
+      WHERE 
+        R.nombre = ?;
+    `,
+      [region],
+    );
+
+    // Consulta para obtener los demás totales (costo real, por valuar, por facturar, facturado)
+    const [otherTotalsRow] = await pool.query(
+      `
+      SELECT
         COALESCE(SUM(CP.costo), 0) AS total_costo_real,
         SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS total_por_valuar,
         SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS total_por_facturar,
@@ -69,34 +96,31 @@ export const getDashboardRegion = async (req, res) => {
       LEFT JOIN 
         costos_proyectos CP ON P.id = CP.id_proyecto
       WHERE 
-        R.nombre = ?
-      GROUP BY
-        R.nombre;
+        R.nombre = ?;
     `,
       [region],
-    )
+    );
 
     // Verificar si se encontraron resultados
     if (projectRows.length === 0) {
-      return res.status(404).json({ message: "No se encontraron proyectos para la región especificada." })
+      return res.status(404).json({ message: "No se encontraron proyectos para la región especificada." });
     }
 
     // Devolver los resultados en formato JSON con proyectos detallados y totales
     res.json({
       proyectos: projectRows,
-      totales: totalsRow[0] || {
+      totales: {
         region,
-        total_ofertado: 0,
-        total_costo_planificado: 0,
-        total_costo_real: 0,
-        total_por_valuar: 0,
-        total_por_facturar: 0,
-        total_facturado: 0,
+        total_ofertado: totalOfertadoRow[0]?.total_ofertado || 0,
+        total_costo_planificado: totalCostoPlanificadoRow[0]?.total_costo_planificado || 0,
+        total_costo_real: otherTotalsRow[0]?.total_costo_real || 0,
+        total_por_valuar: otherTotalsRow[0]?.total_por_valuar || 0,
+        total_por_facturar: otherTotalsRow[0]?.total_por_facturar || 0,
+        total_facturado: otherTotalsRow[0]?.total_facturado || 0,
       },
-    })
+    });
   } catch (error) {
-    console.error("Error al ejecutar la consulta:", error)
-    res.status(500).json({ message: "Ocurrió un error al procesar la solicitud." })
+    console.error("Error al ejecutar la consulta:", error);
+    res.status(500).json({ message: "Ocurrió un error al procesar la solicitud." });
   }
-}
-
+};
