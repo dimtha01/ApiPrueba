@@ -38,40 +38,55 @@ GROUP BY
 export const getProyectoById = async (req, res) => {
   try {
     const params = req.params;
+
+    // Validar que el ID sea un número entero
+    if (!Number.isInteger(Number(params.id))) {
+      return res.status(400).json({ message: "ID de proyecto inválido" });
+    }
+
+    // Ejecutar la consulta con el ID como parámetro
     const [rows] = await pool.query(`
-     SELECT 
-    p.id,
-    p.numero,
-    p.nombre AS nombre_proyecto,
-    p.nombre_cortos,
-    c.nombre AS nombre_cliente,
-    r.nombre AS nombre_responsable,
-    reg.nombre AS nombre_region,
-    c.unidad_negocio AS unidad_negocio,
-    p.costo_estimado,
-    p.monto_ofertado,
-    p.fecha_inicio,
-    p.fecha_final,
-    p.duracion,
-    MAX(af.avance_real) AS avance_real_maximo,
-    MAX(af.avance_planificado) AS avance_planificado_maximo,
-    COALESCE(SUM(cp.costo), 0) AS costo_real_total -- Suma de los costos reales
-FROM 
-    proyectos p
-    LEFT JOIN clientes c ON p.id_cliente = c.id
-    LEFT JOIN responsables r ON p.id_responsable = r.id
-    LEFT JOIN regiones reg ON p.id_region = reg.id
-    LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
-    LEFT JOIN costos_proyectos cp ON p.id = cp.id_proyecto -- Unión con la tabla de costos reales
-WHERE 
-    p.id = ?
-GROUP BY 
-    p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
-    p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
-    `, params.id);
+      SELECT 
+          p.id,
+          p.numero,
+          p.nombre AS nombre_proyecto,
+          p.nombre_cortos,
+          c.nombre AS nombre_cliente,
+          r.nombre AS nombre_responsable,
+          reg.nombre AS nombre_region,
+          c.unidad_negocio AS unidad_negocio,
+          p.costo_estimado,
+          p.monto_ofertado,
+          p.fecha_inicio,
+          p.fecha_final,
+          p.duracion,
+          MAX(af.avance_real) AS avance_real_maximo,
+          MAX(af.avance_planificado) AS avance_planificado_maximo,
+          (
+              SELECT COALESCE(SUM(costo), 0)
+              FROM costos_proyectos cp2
+              WHERE cp2.id_proyecto = ?
+          ) AS costo_real_total -- Costo específico del proyecto con id = 41
+      FROM 
+          proyectos p
+          LEFT JOIN clientes c ON p.id_cliente = c.id
+          LEFT JOIN responsables r ON p.id_responsable = r.id
+          LEFT JOIN regiones reg ON p.id_region = reg.id
+          LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+          LEFT JOIN costos_proyectos cp ON p.id = cp.id_proyecto -- Unión con la tabla de costos reales
+      WHERE 
+          p.id = ?
+      GROUP BY 
+          p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
+          p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
+    `, [params.id, params.id]); // Pasamos el mismo ID dos veces: una para la subconsulta y otra para el filtro principal
+
+    // Verificar si se encontró el proyecto
     if (rows.length === 0) {
       return res.status(404).json({ message: "Proyecto no encontrado" });
     }
+
+    // Devolver el primer resultado
     res.json(rows[0]);
   } catch (error) {
     console.error(error);
