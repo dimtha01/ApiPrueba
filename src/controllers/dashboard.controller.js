@@ -10,6 +10,7 @@ export const getDashboardRegion = async (req, res) => {
       SELECT
         P.id AS id_proyecto,
         P.nombre AS nombre_proyecto,
+        P.nombre_cortos,
         P.costo_estimado AS costo_planificado,
         P.monto_ofertado,
         R.nombre AS region,
