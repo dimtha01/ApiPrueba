@@ -105,7 +105,7 @@ LEFT JOIN
 LEFT JOIN 
     regiones R ON P.id_region = R.id
 WHERE 
-    R.nombre = ?
+    R.nombre = ?;
     `,
       [region],
     );
