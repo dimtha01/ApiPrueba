@@ -87,12 +87,12 @@ export const getDashboardRegion = async (req, res) => {
     // Consulta para obtener los demás totales (costo real, por valuar, por facturar, facturado)
     const [otherTotalsRow] = await pool.query(
       `
-      SELECT
+       SELECT
        (
         SELECT COALESCE(SUM(costo), 0)
         FROM costos_proyectos cp2
         WHERE cp2.id_proyecto = id_proyecto
-    ) AS costo_real_total,
+    ) AS total_costo_real,
         SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS total_por_valuar,
         SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS total_por_facturar,
         SUM(CASE WHEN AV.id_estatus_proceso = 6 THEN AV.monto_usd ELSE 0 END) AS total_facturado
@@ -105,7 +105,7 @@ export const getDashboardRegion = async (req, res) => {
       LEFT JOIN 
         costos_proyectos CP ON P.id = CP.id_proyecto
       WHERE 
-        R.nombre = ?
+        R.nombre = "oriente"
       ORDER BY P.id;
     `,
       [region],
