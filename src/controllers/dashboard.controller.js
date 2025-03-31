@@ -7,7 +7,7 @@ export const getDashboardRegion = async (req, res) => {
     // Consulta para obtener datos detallados por proyecto
     const [projectRows] = await pool.query(
       `
-      SELECT
+     SELECT
         P.id AS id_proyecto,
         P.nombre AS nombre_proyecto,
         P.nombre_cortos,
@@ -18,7 +18,7 @@ export const getDashboardRegion = async (req, res) => {
         SELECT COALESCE(SUM(costo), 0)
         FROM costos_proyectos cp2
         WHERE cp2.id_proyecto = P.id
-    ) AS costo_real_total,
+    ) AS costo_real,
         SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS monto_por_valuar,
         SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS monto_por_facturar,
         SUM(CASE WHEN AV.id_estatus_proceso = 6 THEN AV.monto_usd ELSE 0 END) AS monto_facturado,
