@@ -14,7 +14,11 @@ export const getDashboardRegion = async (req, res) => {
         P.costo_estimado AS costo_planificado,
         P.monto_ofertado,
         R.nombre AS region,
-        COALESCE(SUM(CP.costo), 0) AS costo_real, -- Suma de los costos reales por proyecto
+        (
+        SELECT COALESCE(SUM(costo), 0)
+        FROM costos_proyectos cp2
+        WHERE cp2.id_proyecto = P.id
+    ) AS costo_real_total,
         SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS monto_por_valuar,
         SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS monto_por_facturar,
         SUM(CASE WHEN AV.id_estatus_proceso = 6 THEN AV.monto_usd ELSE 0 END) AS monto_facturado,
