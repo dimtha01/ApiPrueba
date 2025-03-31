@@ -105,7 +105,7 @@ export const getDashboardRegion = async (req, res) => {
       LEFT JOIN 
         costos_proyectos CP ON P.id = CP.id_proyecto
       WHERE 
-        R.nombre = "oriente"
+        R.nombre = ?
       ORDER BY P.id;
     `,
       [region],
