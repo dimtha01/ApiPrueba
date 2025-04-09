@@ -2,36 +2,65 @@ import { pool } from "../db.js";
 
 export const getProyects = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-       SELECT 
-    p.id,
-    p.numero,
-    p.nombre AS nombre_proyecto,
-    p.nombre_cortos,
-    c.nombre AS nombre_cliente,
-    r.nombre AS nombre_responsable,
-    reg.nombre AS nombre_region,
-    c.unidad_negocio AS unidad_negocio,
-    p.costo_estimado,
-    p.monto_ofertado,
-    p.fecha_inicio,
-    p.fecha_final,
-    p.duracion,
-    MAX(af.avance_real) AS avance_real_maximo,
-    MAX(af.avance_planificado) AS avance_planificado_maximo
-FROM 
-    proyectos p
-    LEFT JOIN clientes c ON p.id_cliente = c.id
-    LEFT JOIN responsables r ON p.id_responsable = r.id
-    LEFT JOIN regiones reg ON p.id_region = reg.id
-    LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
-GROUP BY 
-    p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
-    p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
-    `);
+    const { region } = req.query; // Obtener el parámetro de consulta 'region'
+    console.log(region);
+
+    // Construir la consulta base
+    let query = `
+      SELECT 
+          p.id,
+          p.numero,
+          p.nombre AS nombre_proyecto,
+          p.nombre_cortos,
+          c.nombre AS nombre_cliente,
+          r.nombre AS nombre_responsable,
+          reg.nombre AS nombre_region,
+          c.unidad_negocio AS unidad_negocio,
+          p.costo_estimado,
+          p.monto_ofertado,
+          p.fecha_inicio,
+          p.fecha_final,
+          p.duracion,
+          MAX(af.avance_real) AS avance_real_maximo,
+          MAX(af.avance_planificado) AS avance_planificado_maximo
+      FROM 
+          proyectos p
+          LEFT JOIN clientes c ON p.id_cliente = c.id
+          LEFT JOIN responsables r ON p.id_responsable = r.id
+          LEFT JOIN regiones reg ON p.id_region = reg.id
+          LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+    `;
+
+    // Agregar condición WHERE si se proporciona el parámetro 'region'
+    const queryParams = [];
+    if (region) {
+      // Validar que el parámetro 'region' no esté vacío
+      if (!region.trim()) {
+        return res.status(400).json({ message: "El nombre de la región no puede estar vacío" });
+      }
+      query += " WHERE reg.nombre = ?";
+      queryParams.push(region);
+    }
+
+    query += `
+      GROUP BY 
+          p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
+          p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
+    `;
+
+    // Ejecutar la consulta con los parámetros necesarios
+    const [rows] = await pool.query(query, queryParams);
+
+    // Verificar si se encontraron proyectos
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No se encontraron proyectos para la región especificada" });
+    }
+
+    // Devolver los resultados
     res.json(rows);
   } catch (error) {
-    return res.status(500).json({ message: "Something goes wrong" });
+    console.error(error);
+    return res.status(500).json({ message: "Algo salió mal" });
   }
 };
 
