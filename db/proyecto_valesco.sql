@@ -189,6 +189,9 @@ ALTER TABLE costos_proyectos
 ADD CONSTRAINT fk_id
 FOREIGN KEY (id_estatus) REFERENCES estatus_proceso(id_estatus);
 
+ALTER TABLE costos_proyectos
+ADD COLUMN numero_valuacion numero_valuacion DEFAULT NULL;
+
 CREATE TABLE requisition (
     id INT NOT NULL AUTO_INCREMENT,
     id_tipo INT NOT NULL,

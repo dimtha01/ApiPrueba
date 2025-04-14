@@ -37,7 +37,8 @@ export const getCostosByProyecto = async (req, res) => {
         monto_sobrepasado,
         fecha_inicio,
         fecha_fin,
-        e.nombre_estatus
+        e.nombre_estatus,
+        numero_valuacion
       FROM 
         costos_proyectos c
       JOIN estatus_proceso  e ON c.id_estatus = e.id_estatus
@@ -128,13 +129,13 @@ export const updateCostoEstatus = async (req, res) => {
 
 export const createCostos = async (req, res) => {
   try {
-    // Extraer los datos del cuerpo de la solicitud
-    const { id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin } = req.body;
+    // Extraer los datos del cuerpo de la solicitud (incluyendo numero_valuacion)
+    const { id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion } = req.body;
 
     // Validar que los campos obligatorios estén presentes
     if (!id_proyecto || !fecha || !costo || !fecha_inicio || !fecha_fin) {
       return res.status(400).json({
-        message: "Todos los campos son obligatorios: id_proyecto, fecha y costo.",
+        message: "Todos los campos son obligatorios: id_proyecto, fecha, costo, fecha_inicio y fecha_fin.",
       });
     }
 
@@ -157,6 +158,15 @@ export const createCostos = async (req, res) => {
       }
     }
 
+    // Validar que numero_valuacion tenga un formato adecuado (opcional)
+    if (numero_valuacion !== undefined && numero_valuacion !== null) {
+      if (typeof numero_valuacion !== "string" || numero_valuacion.trim() === "") {
+        return res.status(400).json({
+          message: "El número de valuación debe ser una cadena de texto válida.",
+        });
+      }
+    }
+
     // Verificar que el proyecto exista en la base de datos
     const [proyecto] = await pool.query("SELECT id FROM proyectos WHERE id = ?", [id_proyecto]);
     if (proyecto.length === 0) {
@@ -165,10 +175,10 @@ export const createCostos = async (req, res) => {
       });
     }
 
-    // Insertar el nuevo costo en la base de datos
+    // Insertar el nuevo costo en la base de datos (incluyendo numero_valuacion)
     const [result] = await pool.query(
-      "INSERT INTO costos_proyectos (id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?, ?, ?)",
-      [id_proyecto, fecha, costoNumerico, sobrecostoNumerico, fecha_inicio, fecha_fin]
+      "INSERT INTO costos_proyectos (id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id_proyecto, fecha, costoNumerico, sobrecostoNumerico, fecha_inicio, fecha_fin, numero_valuacion]
     );
 
     // Devolver una respuesta exitosa con el ID del nuevo registro
@@ -180,6 +190,9 @@ export const createCostos = async (req, res) => {
         fecha,
         costo: costoNumerico,
         monto_sobrepasado: sobrecostoNumerico,
+        fecha_inicio,
+        fecha_fin,
+        numero_valuacion, // Incluye el nuevo campo en la respuesta
       },
     });
   } catch (error) {
@@ -325,6 +338,107 @@ export const updateCostos = async (req, res) => {
     console.error("Error al actualizar el costo:", error);
     return res.status(500).json({
       message: "Ocurrió un error al intentar actualizar el registro.",
+    });
+  }
+};
+
+export const updateCosto = async (req, res) => {
+  try {
+    // Extraer los datos del cuerpo de la solicitud
+    const { id } = req.params; // ID del costo a actualizar
+    const { fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion } = req.body;
+
+    // Validar que al menos un campo esté presente para actualizar
+    if (!fecha && costo === undefined && monto_sobrepasado === undefined && !fecha_inicio && !fecha_fin && numero_valuacion === undefined) {
+      return res.status(400).json({
+        message: "Debes proporcionar al menos un campo para actualizar.",
+      });
+    }
+
+    // Validar que el costo sea un número mayor que 0 (si se proporciona)
+    if (costo !== undefined) {
+      const costoNumerico = parseFloat(costo);
+      if (isNaN(costoNumerico) || costoNumerico <= 0) {
+        return res.status(400).json({
+          message: "El costo debe ser un número mayor que 0.",
+        });
+      }
+    }
+
+    // Validar que el sobrecosto sea un número mayor o igual a 0 (si se proporciona)
+    if (monto_sobrepasado !== undefined) {
+      const sobrecostoNumerico = parseFloat(monto_sobrepasado);
+      if (isNaN(sobrecostoNumerico) || sobrecostoNumerico < 0) {
+        return res.status(400).json({
+          message: "El monto sobrepasado debe ser un número mayor o igual a 0.",
+        });
+      }
+    }
+
+    // Validar que numero_valuacion tenga un formato adecuado (si se proporciona)
+    if (numero_valuacion !== undefined && numero_valuacion !== null) {
+      if (typeof numero_valuacion !== "string" || numero_valuacion.trim() === "") {
+        return res.status(400).json({
+          message: "El número de valuación debe ser una cadena de texto válida.",
+        });
+      }
+    }
+
+    // Verificar que el costo exista en la base de datos
+    const [costoExistente] = await pool.query("SELECT * FROM costos_proyectos WHERE id = ?", [id]);
+    if (costoExistente.length === 0) {
+      return res.status(404).json({
+        message: "El costo con el ID proporcionado no existe.",
+      });
+    }
+
+    // Construir la consulta dinámica para actualizar solo los campos proporcionados
+    let query = "UPDATE costos_proyectos SET ";
+    const updates = [];
+    const values = [];
+
+    if (fecha) {
+      updates.push("fecha = ?");
+      values.push(fecha);
+    }
+    if (costo !== undefined) {
+      updates.push("costo = ?");
+      values.push(parseFloat(costo));
+    }
+    if (monto_sobrepasado !== undefined) {
+      updates.push("monto_sobrepasado = ?");
+      values.push(parseFloat(monto_sobrepasado));
+    }
+    if (fecha_inicio) {
+      updates.push("fecha_inicio = ?");
+      values.push(fecha_inicio);
+    }
+    if (fecha_fin) {
+      updates.push("fecha_fin = ?");
+      values.push(fecha_fin);
+    }
+    if (numero_valuacion !== undefined) {
+      updates.push("numero_valuacion = ?");
+      values.push(numero_valuacion);
+    }
+
+    // Agregar el ID al final de los valores
+    values.push(id);
+
+    // Completar la consulta
+    query += updates.join(", ") + " WHERE id = ?";
+
+    // Ejecutar la consulta
+    await pool.query(query, values);
+
+    // Devolver una respuesta exitosa
+    res.status(200).json({
+      message: "Costo actualizado exitosamente.",
+    });
+  } catch (error) {
+    console.error("Error al actualizar el costo:", error);
+    res.status(500).json({
+      message: "Ocurrió un error al procesar la solicitud.",
     });
   }
 };
