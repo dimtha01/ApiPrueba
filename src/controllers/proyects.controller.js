@@ -8,27 +8,54 @@ export const getProyects = async (req, res) => {
     // Construir la consulta base
     let query = `
       SELECT 
-          p.id,
-          p.numero,
-          p.nombre AS nombre_proyecto,
-          p.nombre_cortos,
-          c.nombre AS nombre_cliente,
-          r.nombre AS nombre_responsable,
-          reg.nombre AS nombre_region,
-          c.unidad_negocio AS unidad_negocio,
-          p.costo_estimado,
-          p.monto_ofertado,
-          p.fecha_inicio,
-          p.fecha_final,
-          p.duracion,
-          MAX(af.avance_real) AS avance_real_maximo,
-          MAX(af.avance_planificado) AS avance_planificado_maximo
-      FROM 
-          proyectos p
-          LEFT JOIN clientes c ON p.id_cliente = c.id
-          LEFT JOIN responsables r ON p.id_responsable = r.id
-          LEFT JOIN regiones reg ON p.id_region = reg.id
-          LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+    p.id,
+    p.numero,
+    p.nombre AS nombre_proyecto,
+    p.nombre_cortos,
+    c.nombre AS nombre_cliente,
+    r.nombre AS nombre_responsable,
+    reg.nombre AS nombre_region,
+    c.unidad_negocio AS unidad_negocio,
+    p.costo_estimado,
+    p.monto_ofertado,
+    p.fecha_inicio,
+    p.fecha_final,
+    p.duracion,
+    -- Subconsulta para calcular el monto facturado (estatus 6)
+    (SELECT
+        SUM(af.monto_usd)
+     FROM
+        avance_financiero af
+        INNER JOIN estatus_proceso ep ON af.id_estatus_proceso = ep.id_estatus
+     WHERE
+        af.id_proyecto = p.id
+        AND ep.id_estatus = 6) AS facturado,
+    -- Subconsulta para calcular el monto por valor (estatus diferente de 6)
+    (SELECT
+        SUM(af.monto_usd)
+     FROM
+        avance_financiero af
+        INNER JOIN estatus_proceso ep ON af.id_estatus_proceso = ep.id_estatus
+     WHERE
+        af.id_proyecto = p.id
+        AND ep.id_estatus = 4) AS por_valuar,
+    -- Subconsulta para calcular el monto por factura (estatus relacionado con facturas)
+    (SELECT
+        SUM(af.monto_usd)
+     FROM
+        avance_financiero af
+        INNER JOIN estatus_proceso ep ON af.id_estatus_proceso = ep.id_estatus
+     WHERE
+        af.id_proyecto = p.id
+        AND ep.id_estatus = 5) AS por_factura, -- Ajusta los IDs según tus necesidades
+    MAX(af.avance_real) AS avance_real_maximo,
+    MAX(af.avance_planificado) AS avance_planificado_maximo
+FROM
+    proyectos p
+    LEFT JOIN clientes c ON p.id_cliente = c.id
+    LEFT JOIN responsables r ON p.id_responsable = r.id
+    LEFT JOIN regiones reg ON p.id_region = reg.id
+    LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
     `;
 
     // Agregar condición WHERE si se proporciona el parámetro 'region'
@@ -43,9 +70,20 @@ export const getProyects = async (req, res) => {
     }
 
     query += `
-      GROUP BY 
-          p.id, p.numero, p.nombre, c.nombre, r.nombre, reg.nombre, c.unidad_negocio, 
-          p.costo_estimado, p.monto_ofertado, p.fecha_inicio, p.fecha_final, p.duracion;
+      GROUP BY
+    p.id,
+    p.numero,
+    p.nombre,
+    p.nombre_cortos,
+    c.nombre,
+    r.nombre,
+    reg.nombre,
+    c.unidad_negocio,
+    p.costo_estimado,
+    p.monto_ofertado,
+    p.fecha_inicio,
+    p.fecha_final,
+    p.duracion;
     `;
 
     // Ejecutar la consulta con los parámetros necesarios

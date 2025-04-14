@@ -112,7 +112,7 @@ WHERE
 
     // Verificar si se encontraron resultados
     if (projectRows.length === 0) {
-      return res.status(404).json({ message: "No se encontraron proyectos para la región especificada." });
+      return res.status(400).json({ message: "No se encontraron proyectos para la región especificada." });
     }
 
     // Devolver los resultados en formato JSON con proyectos detallados y totales
