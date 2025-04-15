@@ -3,7 +3,7 @@ import { getProyectoById, getProyects, postProyect, putProyect } from "../contro
 
 const router = Router();
 
-router.get("/proyectos", getProyects);
+router.get("/proyectos/:region", getProyects);
 router.get("/proyectos/:id", getProyectoById);
 router.post("/proyectos", postProyect);
 router.put("/proyectos/:id", putProyect);

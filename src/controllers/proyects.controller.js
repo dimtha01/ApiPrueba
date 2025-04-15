@@ -2,7 +2,7 @@ import { pool } from "../db.js";
 
 export const getProyects = async (req, res) => {
   try {
-    const { region } = req.query; // Obtener el parámetro de consulta 'region'
+    const { region } = req.params; // Obtener el parámetro de consulta 'region'
     console.log(region);
 
     // Construir la consulta base
@@ -89,13 +89,80 @@ FROM
     // Ejecutar la consulta con los parámetros necesarios
     const [rows] = await pool.query(query, queryParams);
 
+    const [totalCostoPlanificadoRow] = await pool.query(
+      `
+      SELECT
+        SUM(P.costo_estimado) AS total_costo_planificado
+      FROM 
+        proyectos P
+      LEFT JOIN 
+        regiones R ON P.id_region = R.id
+      WHERE 
+        R.nombre = ?;
+    `,
+      [region],
+    );
+
+    // Consulta para obtener el total_ofertado
+    const [totalOfertadoRow] = await pool.query(
+      `
+      SELECT
+        SUM(P.monto_ofertado) AS total_ofertado
+      FROM 
+        proyectos P
+      LEFT JOIN 
+        regiones R ON P.id_region = R.id
+      WHERE 
+        R.nombre = ?;
+    `,
+      [region],
+    );
+
+    // Consulta para obtener los demás totales (costo real, por valuar, por facturar, facturado)
+    const [otherTotalsRow] = await pool.query(
+      `
+     SELECT
+    (
+        SELECT COALESCE(SUM(costo), 0)
+        FROM costos_proyectos cp2
+        JOIN proyectos P ON cp2.id_proyecto = P.id
+        JOIN regiones R ON P.id_region = R.id
+        WHERE R.nombre = ?	
+    ) AS total_costo_real,
+    SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS total_por_valuar,
+    SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS total_por_facturar,
+    SUM(CASE WHEN AV.id_estatus_proceso = 6 THEN AV.monto_usd ELSE 0 END) AS total_facturado
+FROM 
+    proyectos P
+LEFT JOIN 
+    avance_financiero AV ON AV.id_proyecto = P.id
+LEFT JOIN 
+    regiones R ON P.id_region = R.id
+WHERE 
+    R.nombre = ?;
+    `,
+      [region, region],
+    );
+
+
     // Verificar si se encontraron proyectos
     if (rows.length === 0) {
       return res.status(404).json({ message: "No se encontraron proyectos para la región especificada" });
     }
 
     // Devolver los resultados
-    res.json(rows);
+    res.json({
+      proyectos: rows,
+      totales: {
+        region,
+        total_ofertado: totalOfertadoRow[0]?.total_ofertado || 0,
+        total_costo_planificado: totalCostoPlanificadoRow[0]?.total_costo_planificado || 0,
+        total_costo_real: otherTotalsRow[0]?.total_costo_real || 0,
+        total_por_valuar: otherTotalsRow[0]?.total_por_valuar || 0,
+        total_por_facturar: otherTotalsRow[0]?.total_por_facturar || 0,
+        total_facturado: otherTotalsRow[0]?.total_facturado || 0,
+      },
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Algo salió mal" });
