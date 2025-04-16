@@ -55,7 +55,7 @@ pool
 // Escuchar eventos de error del pool
 pool.on("error", (err) => {
   console.error("Error en el pool de conexiones:");
-  if (err.code === "PROTOCOL_CONNECTION_LOST") {
+  if (err.code === "PROTOCOL_CONNECTION_LOSTs") {
     console.error("La conexión con el servidor MySQL se perdió.");
   } else if (err.code === "ER_CON_COUNT_ERROR") {
     console.error("Se alcanzó el límite máximo de conexiones al servidor MySQL.");
