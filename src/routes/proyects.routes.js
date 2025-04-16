@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { getProyectoById, getProyects, postProyect, putProyect } from "../controllers/proyects.controller.js";
+import { getProyectoById, getProyectsAll, getProyectsNameRegion, postProyect, putProyect } from "../controllers/proyects.controller.js";
 
 const router = Router();
 
-router.get("/proyectos/:region", getProyects);
+router.get("/proyectos/all", getProyectsAll);
+router.get("/proyectos/:region", getProyectsNameRegion);
 router.get("/proyectos/id/:id", getProyectoById);
 router.post("/proyectos", postProyect);
 router.put("/proyectos/:id", putProyect);

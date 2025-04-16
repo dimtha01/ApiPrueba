@@ -1,6 +1,123 @@
 import { pool } from "../db.js";
 
-export const getProyects = async (req, res) => {
+export const getProyectsAll = async (req, res) => {
+  try {
+    let query = `
+      SELECT 
+        p.id,
+        p.numero,
+        p.nombre AS nombre_proyecto,
+        p.nombre_cortos,
+        c.nombre AS nombre_cliente,
+        r.nombre AS nombre_responsable,
+        reg.nombre AS nombre_region,
+        c.unidad_negocio AS unidad_negocio,
+        p.costo_estimado,
+        p.monto_ofertado,
+        p.fecha_inicio,
+        p.fecha_final,
+        p.duracion,
+        -- Subconsulta para calcular el monto facturado (estatus 6)
+        COALESCE((SELECT SUM(af.monto_usd)
+                  FROM avance_financiero af
+                  INNER JOIN estatus_proceso ep ON af.id_estatus_proceso = ep.id_estatus
+                  WHERE af.id_proyecto = p.id AND ep.id_estatus = 6), 0) AS facturado,
+        -- Subconsulta para calcular el monto por valor (estatus diferente de 6)
+        COALESCE((SELECT SUM(af.monto_usd)
+                  FROM avance_financiero af
+                  INNER JOIN estatus_proceso ep ON af.id_estatus_proceso = ep.id_estatus
+                  WHERE af.id_proyecto = p.id AND ep.id_estatus = 4), 0) AS por_valuar,
+        -- Subconsulta para calcular el monto por factura (estatus relacionado con facturas)
+        COALESCE((SELECT SUM(af.monto_usd)
+                  FROM avance_financiero af
+                  INNER JOIN estatus_proceso ep ON af.id_estatus_proceso = ep.id_estatus
+                  WHERE af.id_proyecto = p.id AND ep.id_estatus = 5), 0) AS por_factura,
+        MAX(af.avance_real) AS avance_real_maximo,
+        MAX(af.avance_planificado) AS avance_planificado_maximo
+      FROM
+        proyectos p
+        LEFT JOIN clientes c ON p.id_cliente = c.id
+        LEFT JOIN responsables r ON p.id_responsable = r.id
+        LEFT JOIN regiones reg ON p.id_region = reg.id
+        LEFT JOIN avance_fisico af ON p.id = af.id_proyecto
+    `;
+
+    query += `
+      GROUP BY
+        p.id,
+        p.numero,
+        p.nombre,
+        p.nombre_cortos,
+        c.nombre,
+        r.nombre,
+        reg.nombre,
+        c.unidad_negocio,
+        p.costo_estimado,
+        p.monto_ofertado,
+        p.fecha_inicio,
+        p.fecha_final,
+        p.duracion;
+    `;
+    const [rows] = await pool.query(query);
+
+    // Consulta para obtener el total_costo_planificado (para todos los proyectos)
+    const [totalCostoPlanificadoRow] = await pool.query(
+      `
+      SELECT
+        SUM(P.costo_estimado) AS total_costo_planificado
+      FROM 
+        proyectos P;
+    `
+    );
+
+    // Consulta para obtener el total_ofertado (para todos los proyectos)
+    const [totalOfertadoRow] = await pool.query(
+      `
+      SELECT
+        SUM(P.monto_ofertado) AS total_ofertado
+      FROM 
+        proyectos P;
+    `
+    );
+
+    // Consulta para obtener los demás totales (costo real, por valuar, por facturar, facturado) para todos los proyectos
+    const [otherTotalsRow] = await pool.query(
+      `
+      SELECT
+        (
+          SELECT COALESCE(SUM(costo), 0)
+          FROM costos_proyectos cp2
+          JOIN proyectos P ON cp2.id_proyecto = P.id
+        ) AS total_costo_real,
+        SUM(CASE WHEN AV.id_estatus_proceso = 4 THEN AV.monto_usd ELSE 0 END) AS total_por_valuar,
+        SUM(CASE WHEN AV.id_estatus_proceso = 5 THEN AV.monto_usd ELSE 0 END) AS total_por_facturar,
+        SUM(CASE WHEN AV.id_estatus_proceso = 6 THEN AV.monto_usd ELSE 0 END) AS total_facturado
+      FROM 
+        proyectos P
+      LEFT JOIN 
+        avance_financiero AV ON AV.id_proyecto = P.id;
+    `
+    );
+
+    res.json({
+      proyectos: rows,
+      totales: {
+        total_ofertado: totalOfertadoRow[0]?.total_ofertado || 0,
+        total_costo_planificado: totalCostoPlanificadoRow[0]?.total_costo_planificado || 0,
+        total_costo_real: otherTotalsRow[0]?.total_costo_real || 0,
+        total_por_valuar: otherTotalsRow[0]?.total_por_valuar || 0,
+        total_por_facturar: otherTotalsRow[0]?.total_por_facturar || 0,
+        total_facturado: otherTotalsRow[0]?.total_facturado || 0,
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Algo salió mal" });
+  }
+};
+
+export const getProyectsNameRegion = async (req, res) => {
   try {
     const { region } = req.params; // Obtener el parámetro de consulta 'region'
     console.log(region);
