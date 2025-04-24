@@ -12,7 +12,7 @@ export const getCostosByProyecto = async (req, res) => {
       });
     }
 
-    // Consultar el costo ofertado del proyecto
+    // Consultar el costo ofertado (costo_estimado) del proyecto
     const [proyectoResult] = await pool.query(
       "SELECT costo_estimado FROM proyectos WHERE id = ?",
       [id]
@@ -27,7 +27,37 @@ export const getCostosByProyecto = async (req, res) => {
 
     const costoOfertado = proyectoResult[0].costo_estimado;
 
-    // Consultar los costos asociados al proyecto
+    // Consultar el total de monto anticipado (monto_anticipo) asociado al proyecto
+    const [montoAnticipoResult] = await pool.query(
+      `
+      SELECT 
+        COALESCE(SUM(req.monto_anticipo), 0) AS total_monto_anticipo
+      FROM 
+        requisition req
+      WHERE 
+        req.id_proyecto = ?
+      `,
+      [id]
+    );
+
+    const totalMontoAnticipo = montoAnticipoResult[0]?.total_monto_anticipo || 0;
+
+    // Consultar el total de la amortización asociada al proyecto
+    const [amortizacionResult] = await pool.query(
+      `
+      SELECT 
+        COALESCE(SUM(c.amortizacion), 0) AS total_amortizacion
+      FROM 
+        costos_proyectos c
+      WHERE 
+        c.id_proyecto = ?
+      `,
+      [id]
+    );
+
+    const totalAmortizacion = amortizacionResult[0]?.total_amortizacion || 0;
+
+    // Consultar los costos asociados al proyecto (incluyendo amortización)
     const [costosResult] = await pool.query(
       `
       SELECT 
@@ -38,10 +68,11 @@ export const getCostosByProyecto = async (req, res) => {
         fecha_inicio,
         fecha_fin,
         e.nombre_estatus,
-        numero_valuacion
+        numero_valuacion,
+        amortizacion -- Agregamos el campo amortización aquí
       FROM 
         costos_proyectos c
-      JOIN estatus_proceso  e ON c.id_estatus = e.id_estatus
+      JOIN estatus_proceso e ON c.id_estatus = e.id_estatus
       WHERE 
         id_proyecto = ?
       ORDER BY 
@@ -50,11 +81,30 @@ export const getCostosByProyecto = async (req, res) => {
       [id]
     );
 
+    // Consultar el costo total de las órdenes de compra asociadas al proyecto
+    const [CostoOrdenesCompra] = await pool.query(
+      `
+      SELECT 
+        COALESCE(SUM(r.monto_total), 0) AS Costo_ordenes_Compra
+      FROM 
+        requisition r
+      INNER JOIN proyectos p ON r.id_proyecto = p.id
+      WHERE 
+        p.id = ?
+      `,
+      [id] // Usamos el ID dinámico en lugar de un valor fijo
+    );
+
+    const costoOrdenesCompra = CostoOrdenesCompra[0]?.Costo_ordenes_Compra || 0;
+
     // Devolver la respuesta con los datos solicitados
     res.status(200).json({
       message: "Costos obtenidos exitosamente.",
-      costosOfertado: costoOfertado, // Incluir el costo ofertado
-      costos: costosResult, // Incluir los costos recuperados
+      costosOfertado: costoOfertado, // Costo ofertado del proyecto
+      totalMontoAnticipo: totalMontoAnticipo, // Total de monto anticipado
+      totalAmortizacion: totalAmortizacion, // Total de la amortización
+      CostoOrdenesCompra: costoOrdenesCompra, // Costo total de las órdenes de compra
+      costos: costosResult, // Detalle de los costos asociados al proyecto
     });
   } catch (error) {
     console.error("Error al obtener los costos:", error);
@@ -129,8 +179,17 @@ export const updateCostoEstatus = async (req, res) => {
 
 export const createCostos = async (req, res) => {
   try {
-    // Extraer los datos del cuerpo de la solicitud (incluyendo numero_valuacion)
-    const { id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion } = req.body;
+    // Extraer los datos del cuerpo de la solicitud (incluyendo amortización)
+    const {
+      id_proyecto,
+      fecha,
+      costo,
+      monto_sobrepasado,
+      fecha_inicio,
+      fecha_fin,
+      numero_valuacion,
+      amortizacion, // Nuevo campo agregado aquí
+    } = req.body;
 
     // Validar que los campos obligatorios estén presentes
     if (!id_proyecto || !fecha || !costo || !fecha_inicio || !fecha_fin) {
@@ -158,6 +217,17 @@ export const createCostos = async (req, res) => {
       }
     }
 
+    // Validar que la amortización (si existe) sea un número mayor o igual a 0
+    let amortizacionNumerica = 0; // Valor predeterminado si no se proporciona
+    if (amortizacion !== undefined && amortizacion !== null) {
+      amortizacionNumerica = parseFloat(amortizacion);
+      if (isNaN(amortizacionNumerica) || amortizacionNumerica < 0) {
+        return res.status(400).json({
+          message: "La amortización debe ser un número mayor o igual a 0.",
+        });
+      }
+    }
+
     // Validar que numero_valuacion tenga un formato adecuado (opcional)
     if (numero_valuacion !== undefined && numero_valuacion !== null) {
       if (typeof numero_valuacion !== "string" || numero_valuacion.trim() === "") {
@@ -175,10 +245,19 @@ export const createCostos = async (req, res) => {
       });
     }
 
-    // Insertar el nuevo costo en la base de datos (incluyendo numero_valuacion)
+    // Insertar el nuevo costo en la base de datos (incluyendo amortización)
     const [result] = await pool.query(
-      "INSERT INTO costos_proyectos (id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [id_proyecto, fecha, costoNumerico, sobrecostoNumerico, fecha_inicio, fecha_fin, numero_valuacion]
+      "INSERT INTO costos_proyectos (id_proyecto, fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion, amortizacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        id_proyecto,
+        fecha,
+        costoNumerico,
+        sobrecostoNumerico,
+        fecha_inicio,
+        fecha_fin,
+        numero_valuacion,
+        amortizacionNumerica, // Incluye la amortización en la inserción
+      ]
     );
 
     // Devolver una respuesta exitosa con el ID del nuevo registro
@@ -192,7 +271,8 @@ export const createCostos = async (req, res) => {
         monto_sobrepasado: sobrecostoNumerico,
         fecha_inicio,
         fecha_fin,
-        numero_valuacion, // Incluye el nuevo campo en la respuesta
+        numero_valuacion, // Incluye el número de valuación en la respuesta
+        amortizacion: amortizacionNumerica, // Incluye la amortización en la respuesta
       },
     });
   } catch (error) {
@@ -346,10 +426,18 @@ export const updateCosto = async (req, res) => {
   try {
     // Extraer los datos del cuerpo de la solicitud
     const { id } = req.params; // ID del costo a actualizar
-    const { fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion } = req.body;
+    const { fecha, costo, monto_sobrepasado, fecha_inicio, fecha_fin, numero_valuacion, amortizacion } = req.body;
 
     // Validar que al menos un campo esté presente para actualizar
-    if (!fecha && costo === undefined && monto_sobrepasado === undefined && !fecha_inicio && !fecha_fin && numero_valuacion === undefined) {
+    if (
+      !fecha &&
+      costo === undefined &&
+      monto_sobrepasado === undefined &&
+      !fecha_inicio &&
+      !fecha_fin &&
+      numero_valuacion === undefined &&
+      amortizacion === undefined
+    ) {
       return res.status(400).json({
         message: "Debes proporcionar al menos un campo para actualizar.",
       });
@@ -371,6 +459,16 @@ export const updateCosto = async (req, res) => {
       if (isNaN(sobrecostoNumerico) || sobrecostoNumerico < 0) {
         return res.status(400).json({
           message: "El monto sobrepasado debe ser un número mayor o igual a 0.",
+        });
+      }
+    }
+
+    // Validar que la amortización sea un número mayor o igual a 0 (si se proporciona)
+    if (amortizacion !== undefined) {
+      const amortizacionNumerica = parseFloat(amortizacion);
+      if (isNaN(amortizacionNumerica) || amortizacionNumerica < 0) {
+        return res.status(400).json({
+          message: "La amortización debe ser un número mayor o igual a 0.",
         });
       }
     }
@@ -420,6 +518,10 @@ export const updateCosto = async (req, res) => {
     if (numero_valuacion !== undefined) {
       updates.push("numero_valuacion = ?");
       values.push(numero_valuacion);
+    }
+    if (amortizacion !== undefined) {
+      updates.push("amortizacion = ?");
+      values.push(parseFloat(amortizacion)); // Añadir la amortización a la consulta
     }
 
     // Agregar el ID al final de los valores

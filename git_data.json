@@ -1,0 +1,19 @@
+{
+    "repositories": [
+        {
+            "name": "proyecto_prueba",
+            "branches": [
+                "main"
+            ],
+            "current_branch": "main",
+            "files": [
+                "README.md",
+                "main.py",
+                "utils.py",
+                "config.json"
+            ]
+        }
+    ],
+    "current_repository": 0,
+    "current_user_email": "admin@example.com"
+}

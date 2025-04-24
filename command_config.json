@@ -1,0 +1,19 @@
+{
+    "init": true,
+    "status": true,
+    "log": true,
+    "add": true,
+    "commit": true,
+    "checkout": true,
+    "pr": true,
+    "repo": true,
+    "branch": true,
+    "merge": true,
+    "contributors": true,
+    "add-contributor": true,
+    "remove-contributor": true,
+    "find-contributor": true,
+    "object": true,
+    "role": true,
+    "login": true
+}

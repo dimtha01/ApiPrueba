@@ -4,26 +4,29 @@ export const getRequisitions = async (req, res) => {
   try {
     const [result] = await pool.query(`
       SELECT
-      r.id,
-      tr.nombre as tipo_requisition,
-      r.nro_requisicion,
-      pr.nombre_comercial as nombre_comercial_provedore,
-      r.fecha_elaboracion,
-      r.monto_total,
-      r.nro_renglones
-    FROM
-      requisition r
-      INNER JOIN tipo_requisition tr ON r.id_tipo = tr.id
-      INNER JOIN proyectos p ON r.id_proyecto = p.id
-      INNER JOIN proveedores pr ON r.id_proveedores = pr.id;
-      `);
+        r.id,
+        tr.nombre AS tipo_requisition,
+        r.nro_requisicion,
+        pr.nombre_comercial AS nombre_comercial_provedore,
+        p.nombre_cortos AS nombre_corto_proyecto, -- Campo agregado aquí
+        r.fecha_elaboracion,
+        r.monto_total,
+        r.nro_renglones,
+        r.monto_anticipo -- Campo agregado aquí
+      FROM
+        requisition r
+        INNER JOIN tipo_requisition tr ON r.id_tipo = tr.id
+        INNER JOIN proyectos p ON r.id_proyecto = p.id
+        INNER JOIN proveedores pr ON r.id_proveedores = pr.id;
+    `);
+
+    // Devolver los resultados
     res.json(result);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Algo salió mal" });
   }
 };
-
 export const updateRequisitionStatus = async (req, res) => {
   try {
     // Extraer el ID de la requisición de los parámetros de la URL
@@ -65,19 +68,53 @@ export const updateRequisitionStatus = async (req, res) => {
 };
 export const createRequisition = async (req, res) => {
   try {
-    // Extraer los datos del cuerpo de la solicitud
-    const { id_tipo, id_proyecto, nro_requisicion, id_proveedores, fecha_elaboracion, monto_total, nro_renglones } = req.body;
+    // Extraer los datos del cuerpo de la solicitud, incluyendo monto_anticipo
+    const {
+      id_tipo,
+      id_proyecto,
+      nro_requisicion,
+      id_proveedores,
+      fecha_elaboracion,
+      monto_total,
+      nro_renglones,
+      monto_anticipo, // Nuevo campo agregado aquí
+    } = req.body;
 
     // Validar que todos los campos obligatorios estén presentes
-    if (!id_tipo || !id_proyecto || !nro_requisicion || !id_proveedores || !fecha_elaboracion || !monto_total || !nro_renglones) {
-      return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    if (
+      !id_tipo ||
+      !id_proyecto ||
+      !nro_requisicion ||
+      !id_proveedores ||
+      !fecha_elaboracion ||
+      !monto_total ||
+      !nro_renglones
+    ) {
+      return res.status(400).json({ message: "Todos los campos obligatorios deben estar presentes" });
     }
 
-    // Insertar la nueva requisición en la base de datos
+    // Insertar la nueva requisición en la base de datos, incluyendo monto_anticipo
     const [result] = await pool.query(
-      `INSERT INTO requisition (id_tipo, id_proyecto, nro_requisicion, id_proveedores, fecha_elaboracion, monto_total, nro_renglones) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id_tipo, id_proyecto, nro_requisicion, id_proveedores, fecha_elaboracion, monto_total, nro_renglones]
+      `INSERT INTO requisition (
+        id_tipo, 
+        id_proyecto, 
+        nro_requisicion, 
+        id_proveedores, 
+        fecha_elaboracion, 
+        monto_total, 
+        nro_renglones, 
+        monto_anticipo -- Campo agregado aquí
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id_tipo,
+        id_proyecto,
+        nro_requisicion,
+        id_proveedores,
+        fecha_elaboracion,
+        monto_total,
+        nro_renglones,
+        monto_anticipo || null, // Valor por defecto null si no se proporciona
+      ]
     );
 
     // Devolver el ID de la nueva requisición creada
@@ -90,7 +127,8 @@ export const createRequisition = async (req, res) => {
       id_proveedores,
       fecha_elaboracion,
       monto_total,
-      nro_renglones
+      nro_renglones,
+      monto_anticipo: monto_anticipo || null, // Incluir monto_anticipo en la respuesta
     });
   } catch (error) {
     console.error(error);
