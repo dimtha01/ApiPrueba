@@ -19,8 +19,7 @@ FROM
     INNER JOIN proyectos p ON r.id_proyecto = p.id
     INNER JOIN proveedores pr ON r.id_proveedores = pr.id
 ORDER BY
-    r.id;
-        ;  
+    r.id DESC;  
     `);
 
     // Devolver los resultados
