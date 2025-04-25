@@ -3,21 +3,24 @@ import { pool } from "../db.js";
 export const getRequisitions = async (req, res) => {
   try {
     const [result] = await pool.query(`
-      SELECT
-        r.id,
-        tr.nombre AS tipo_requisition,
-        r.nro_requisicion,
-        pr.nombre_comercial AS nombre_comercial_provedore,
-        p.nombre_cortos AS nombre_corto_proyecto, -- Campo agregado aquí
-        r.fecha_elaboracion,
-        r.monto_total,
-        r.nro_renglones,
-        r.monto_anticipo -- Campo agregado aquí
-      FROM
-        requisition r
-        INNER JOIN tipo_requisition tr ON r.id_tipo = tr.id
-        INNER JOIN proyectos p ON r.id_proyecto = p.id
-        INNER JOIN proveedores pr ON r.id_proveedores = pr.id;
+     SELECT
+    r.id,
+    tr.nombre AS tipo_requisition,
+    r.nro_requisicion,
+    pr.nombre_comercial AS nombre_comercial_proveedor,
+    p.nombre_cortos AS nombre_corto_proyecto,
+    r.fecha_elaboracion,
+    r.monto_total,
+    r.nro_renglones,
+    r.monto_anticipo
+FROM
+    requisition r
+    INNER JOIN tipo_requisition tr ON r.id_tipo = tr.id
+    INNER JOIN proyectos p ON r.id_proyecto = p.id
+    INNER JOIN proveedores pr ON r.id_proveedores = pr.id
+ORDER BY
+    r.id;
+        ;  
     `);
 
     // Devolver los resultados
@@ -113,7 +116,7 @@ export const createRequisition = async (req, res) => {
         fecha_elaboracion,
         monto_total,
         nro_renglones,
-        monto_anticipo || null, // Valor por defecto null si no se proporciona
+        monto_anticipo || 0, // Valor por defecto null si no se proporciona
       ]
     );
 
