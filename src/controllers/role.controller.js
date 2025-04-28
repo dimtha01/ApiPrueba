@@ -8,7 +8,7 @@ import { pool } from "../db.js"
 // @access  Private/Admin
 export const getRoles = async (req, res) => {
   try {
-    const [roles] = await pool.query("SELECT * FROM Roles")
+    const [roles] = await pool.query("SELECT * FROM roles")
 
     res.status(200).json({
       success: true,
@@ -34,7 +34,7 @@ export const getRoles = async (req, res) => {
 // @access  Private/Admin
 export const getRoleById = async (req, res) => {
   try {
-    const [roles] = await pool.query("SELECT * FROM Roles WHERE id = ?", [req.params.id])
+    const [roles] = await pool.query("SELECT * FROM roles WHERE id = ?", [req.params.id])
 
     if (roles.length === 0) {
       return res.status(404).json({
@@ -79,7 +79,7 @@ export const createRole = async (req, res) => {
     }
 
     // Check if role already exists
-    const [existingRoles] = await pool.query("SELECT * FROM Roles WHERE name = ?", [name])
+    const [existingRoles] = await pool.query("SELECT * FROM roles WHERE name = ?", [name])
 
     if (existingRoles.length > 0) {
       return res.status(400).json({
@@ -89,14 +89,14 @@ export const createRole = async (req, res) => {
     }
 
     // Create role
-    const [result] = await pool.query("INSERT INTO Roles (name, permissionEdit) VALUES (?, ?)", [
+    const [result] = await pool.query("INSERT INTO roles (name, permissionEdit) VALUES (?, ?)", [
       name,
       permissionEdit ? 1 : 0,
     ])
 
     if (result.affectedRows > 0) {
       // Get the created role
-      const [roles] = await pool.query("SELECT * FROM Roles WHERE id = ?", [result.insertId])
+      const [roles] = await pool.query("SELECT * FROM roles WHERE id = ?", [result.insertId])
       const role = roles[0]
 
       res.status(201).json({
@@ -131,7 +131,7 @@ export const updateRole = async (req, res) => {
     const { name, permissionEdit } = req.body
 
     // Check if role exists
-    const [roles] = await pool.query("SELECT * FROM Roles WHERE id = ?", [req.params.id])
+    const [roles] = await pool.query("SELECT * FROM roles WHERE id = ?", [req.params.id])
 
     if (roles.length === 0) {
       return res.status(404).json({
@@ -144,7 +144,7 @@ export const updateRole = async (req, res) => {
 
     // Check if updating to an existing name
     if (name && name !== role.name) {
-      const [existingRoles] = await pool.query("SELECT * FROM Roles WHERE name = ? AND id != ?", [name, role.id])
+      const [existingRoles] = await pool.query("SELECT * FROM roles WHERE name = ? AND id != ?", [name, role.id])
 
       if (existingRoles.length > 0) {
         return res.status(400).json({
@@ -155,14 +155,14 @@ export const updateRole = async (req, res) => {
     }
 
     // Update role
-    await pool.query("UPDATE Roles SET name = ?, permissionEdit = ? WHERE id = ?", [
+    await pool.query("UPDATE roles SET name = ?, permissionEdit = ? WHERE id = ?", [
       name || role.name,
       permissionEdit !== undefined ? (permissionEdit ? 1 : 0) : role.permissionEdit,
       role.id,
     ])
 
     // Get updated role
-    const [updatedRoles] = await pool.query("SELECT * FROM Roles WHERE id = ?", [role.id])
+    const [updatedRoles] = await pool.query("SELECT * FROM roles WHERE id = ?", [role.id])
     const updatedRole = updatedRoles[0]
 
     res.status(200).json({
@@ -189,7 +189,7 @@ export const updateRole = async (req, res) => {
 export const deleteRole = async (req, res) => {
   try {
     // Check if role exists
-    const [roles] = await pool.query("SELECT * FROM Roles WHERE id = ?", [req.params.id])
+    const [roles] = await pool.query("SELECT * FROM roles WHERE id = ?", [req.params.id])
 
     if (roles.length === 0) {
       return res.status(404).json({
@@ -199,7 +199,7 @@ export const deleteRole = async (req, res) => {
     }
 
     // Check if role is assigned to any users
-    const [users] = await pool.query("SELECT COUNT(*) as count FROM Users WHERE roleId = ?", [req.params.id])
+    const [users] = await pool.query("SELECT COUNT(*) as count FROM users WHERE roleId = ?", [req.params.id])
 
     if (users[0].count > 0) {
       return res.status(400).json({
@@ -209,7 +209,7 @@ export const deleteRole = async (req, res) => {
     }
 
     // Delete role
-    await pool.query("DELETE FROM Roles WHERE id = ?", [req.params.id])
+    await pool.query("DELETE FROM roles WHERE id = ?", [req.params.id])
 
     res.status(200).json({
       success: true,

@@ -31,7 +31,7 @@ export const login = async (req, res) => {
       `
       SELECT u.*, r.name as roleName, r.permissionEdit 
       FROM users u
-      JOIN Roles r ON u.roleId = r.id
+      JOIN roles r ON u.roleId = r.id
       WHERE u.email = ?
     `,
       [email],
@@ -96,7 +96,7 @@ export const register = async (req, res) => {
     }
 
     // Get role by name
-    const [roles] = await pool.query("SELECT * FROM Roles WHERE name = ?", [roleName || "user"])
+    const [roles] = await pool.query("SELECT * FROM roles WHERE name = ?", [roleName || "user"])
 
     if (roles.length === 0) {
       return res.status(400).json({
@@ -111,7 +111,7 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user
-    const [result] = await pool.query("INSERT INTO Users (email, password, roleId) VALUES (?, ?, ?)", [
+    const [result] = await pool.query("INSERT INTO users (email, password, roleId) VALUES (?, ?, ?)", [
       email,
       hashedPassword,
       role.id,
@@ -155,7 +155,7 @@ export const getProfile = async (req, res) => {
       `
       SELECT u.*, r.name as roleName, r.permissionEdit 
       FROM users u
-      JOIN Roles r ON u.roleId = r.id
+      JOIN roles r ON u.roleId = r.id
       WHERE u.id = ?
     `,
       [req.user.id],

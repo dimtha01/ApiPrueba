@@ -9,8 +9,8 @@ export const getUsers = async (req, res) => {
   try {
     const [users] = await pool.query(`
       SELECT u.id, u.email, u.createdAt, r.name as roleName, r.permissionEdit 
-      FROM Users u
-      JOIN Roles r ON u.roleId = r.id
+      FROM users u
+      JOIN roles r ON u.roleId = r.id
     `)
 
     const formattedUsers = users.map((user) => ({
@@ -43,8 +43,8 @@ export const getUserById = async (req, res) => {
     const [users] = await pool.query(
       `
       SELECT u.id, u.email, u.createdAt, r.name as roleName, r.permissionEdit 
-      FROM Users u
-      JOIN Roles r ON u.roleId = r.id
+      FROM users u
+      JOIN roles r ON u.roleId = r.id
       WHERE u.id = ?
     `,
       [req.params.id],
@@ -94,7 +94,7 @@ export const createUser = async (req, res) => {
     }
 
     // Check if user already exists
-    const [existingUsers] = await pool.query("SELECT * FROM Users WHERE email = ?", [email])
+    const [existingUsers] = await pool.query("SELECT * FROM users WHERE email = ?", [email])
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
@@ -104,7 +104,7 @@ export const createUser = async (req, res) => {
     }
 
     // Get role by name
-    const [roles] = await pool.query("SELECT * FROM Roles WHERE name = ?", [roleName || "user"])
+    const [roles] = await pool.query("SELECT * FROM roles WHERE name = ?", [roleName || "user"])
 
     if (roles.length === 0) {
       return res.status(400).json({
@@ -119,7 +119,7 @@ export const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user
-    const [result] = await pool.query("INSERT INTO Users (email, password, roleId) VALUES (?, ?, ?)", [
+    const [result] = await pool.query("INSERT INTO users (email, password, roleId) VALUES (?, ?, ?)", [
       email,
       hashedPassword,
       role.id,
@@ -130,8 +130,8 @@ export const createUser = async (req, res) => {
       const [createdUsers] = await pool.query(
         `
         SELECT u.id, u.email, u.createdAt, r.name as roleName, r.permissionEdit 
-        FROM Users u
-        JOIN Roles r ON u.roleId = r.id
+        FROM users u
+        JOIN roles r ON u.roleId = r.id
         WHERE u.id = ?
       `,
         [result.insertId],
@@ -172,7 +172,7 @@ export const updateUser = async (req, res) => {
     const { email, password, roleName } = req.body
 
     // Check if user exists
-    const [users] = await pool.query("SELECT * FROM Users WHERE id = ?", [req.params.id])
+    const [users] = await pool.query("SELECT * FROM users WHERE id = ?", [req.params.id])
 
     if (users.length === 0) {
       return res.status(404).json({
@@ -186,7 +186,7 @@ export const updateUser = async (req, res) => {
 
     // Update role if provided
     if (roleName) {
-      const [roles] = await pool.query("SELECT * FROM Roles WHERE name = ?", [roleName])
+      const [roles] = await pool.query("SELECT * FROM roles WHERE name = ?", [roleName])
 
       if (roles.length === 0) {
         return res.status(400).json({
@@ -200,7 +200,7 @@ export const updateUser = async (req, res) => {
 
     // Check if new email already exists for another user
     if (email && email !== user.email) {
-      const [existingUsers] = await pool.query("SELECT * FROM Users WHERE email = ? AND id != ?", [email, user.id])
+      const [existingUsers] = await pool.query("SELECT * FROM users WHERE email = ? AND id != ?", [email, user.id])
 
       if (existingUsers.length > 0) {
         return res.status(400).json({
@@ -214,22 +214,22 @@ export const updateUser = async (req, res) => {
     if (password) {
       // Hash new password
       const hashedPassword = await bcrypt.hash(password, 10)
-      await pool.query("UPDATE Users SET email = ?, password = ?, roleId = ? WHERE id = ?", [
+      await pool.query("UPDATE users SET email = ?, password = ?, roleId = ? WHERE id = ?", [
         email || user.email,
         hashedPassword,
         roleId,
         user.id,
       ])
     } else {
-      await pool.query("UPDATE Users SET email = ?, roleId = ? WHERE id = ?", [email || user.email, roleId, user.id])
+      await pool.query("UPDATE users SET email = ?, roleId = ? WHERE id = ?", [email || user.email, roleId, user.id])
     }
 
     // Get updated user
     const [updatedUsers] = await pool.query(
       `
       SELECT u.id, u.email, r.name as roleName, r.permissionEdit 
-      FROM Users u
-      JOIN Roles r ON u.roleId = r.id
+      FROM users u
+      JOIN roles r ON u.roleId = r.id
       WHERE u.id = ?
     `,
       [user.id],
@@ -261,7 +261,7 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     // Check if user exists
-    const [users] = await pool.query("SELECT * FROM Users WHERE id = ?", [req.params.id])
+    const [users] = await pool.query("SELECT * FROM users WHERE id = ?", [req.params.id])
 
     if (users.length === 0) {
       return res.status(404).json({
@@ -271,7 +271,7 @@ export const deleteUser = async (req, res) => {
     }
 
     // Delete user
-    await pool.query("DELETE FROM Users WHERE id = ?", [req.params.id])
+    await pool.query("DELETE FROM users WHERE id = ?", [req.params.id])
 
     res.status(200).json({
       success: true,
