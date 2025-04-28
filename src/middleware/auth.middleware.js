@@ -16,7 +16,7 @@ export const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, JWT_SECRET);
 
       // Obtener el usuario desde la base de datos usando el ID decodificado del token
-      const [users] = await pool.query("SELECT id, email, roleId FROM Users WHERE id = ?", [decoded.id]);
+      const [users] = await pool.query("SELECT id, email, roleId FROM users WHERE id = ?", [decoded.id]);
 
       if (users.length === 0) {
         return res.status(401).json({
@@ -49,7 +49,7 @@ export const admin = async (req, res, next) => {
     const [roles] = await pool.query(
       `
       SELECT r.name 
-      FROM Roles r
+      FROM roles r
       JOIN Users u ON r.id = u.roleId
       WHERE u.id = ?
     `,
@@ -79,8 +79,8 @@ export const canEdit = async (req, res, next) => {
     const [roles] = await pool.query(
       `
       SELECT r.permissionEdit 
-      FROM Roles r
-      JOIN Users u ON r.id = u.roleId
+      FROM roles r
+      JOIN users u ON r.id = u.roleId
       WHERE u.id = ?
     `,
       [req.user.id],
