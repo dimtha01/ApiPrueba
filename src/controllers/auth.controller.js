@@ -7,9 +7,7 @@ const JWT_EXPIRES_IN = "4h"; // Agregamos directamente la duración aquí
 
 // Generate JWT token
 const generateToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN
-  })
+  return jwt.sign({ id }, JWT_SECRET)
 }
 
 // @desc    Login user & get token
