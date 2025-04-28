@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 import { pool } from "../db.js"
-import { JWT_EXPIRES_IN, JWT_SECRET } from "../config.js"
+import { JWT_SECRET } from "../config.js"
 
+const JWT_EXPIRES_IN = "4h"; // Agregamos directamente la duración aquí
 
 // Generate JWT token
 const generateToken = (id) => {

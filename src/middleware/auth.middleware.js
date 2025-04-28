@@ -5,43 +5,44 @@ import { JWT_SECRET } from "../config.js"
 
 // Protect routes - verify token
 export const protect = async (req, res, next) => {
-  let token
+  let token;
 
-  // Check if token exists in headers
+  // Verificar si el token existe en los headers
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
-      // Get token from header
-      token = req.headers.authorization.split(" ")[1]
+      // Obtener el token del header
+      token = req.headers.authorization.split(" ")[1];
 
-      // Verify token
-      const decoded = jwt.verify(token, JWT_SECRET)
+      // Verificar el token
+      const decoded = jwt.verify(token, JWT_SECRET);
 
-      // Get user from token
-      const [users] = await pool.query("SELECT id, email, roleId FROM Users WHERE id = ?", [decoded.id])
+      // Obtener el usuario desde la base de datos usando el ID decodificado del token
+      const [users] = await pool.query("SELECT id, email, roleId FROM Users WHERE id = ?", [decoded.id]);
 
       if (users.length === 0) {
         return res.status(401).json({
           success: false,
           message: "User not found",
-        })
+        });
       }
 
-      req.user = users[0]
-      next()
+      // Asignar el usuario a `req.user`
+      req.user = users[0];
+      next();
     } catch (error) {
-      console.error("Auth middleware error:", error)
+      console.error("Auth middleware error:", error);
       res.status(401).json({
         success: false,
         message: "Not authorized, token failed",
-      })
+      });
     }
   } else {
     res.status(401).json({
       success: false,
       message: "Not authorized, no token",
-    })
+    });
   }
-}
+};
 
 // Check if user has admin role
 export const admin = async (req, res, next) => {
