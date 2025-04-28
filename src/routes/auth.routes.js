@@ -9,7 +9,7 @@ const router = express.Router()
 router.post("/login", login)
 
 // Protected routes
-router.get("/profile", getProfile)
+router.get("/profile", protect, getProfile)
 
 // Admin routes
 router.post("/register", protect, admin, register)
