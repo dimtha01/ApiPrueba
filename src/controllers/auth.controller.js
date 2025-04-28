@@ -30,7 +30,7 @@ export const login = async (req, res) => {
     const [users] = await pool.query(
       `
       SELECT u.*, r.name as roleName, r.permissionEdit 
-      FROM Users u
+      FROM users u
       JOIN Roles r ON u.roleId = r.id
       WHERE u.email = ?
     `,
@@ -86,7 +86,7 @@ export const register = async (req, res) => {
     const { email, password, roleName } = req.body
 
     // Check if user already exists
-    const [existingUsers] = await pool.query("SELECT * FROM Users WHERE email = ?", [email])
+    const [existingUsers] = await pool.query("SELECT * FROM users WHERE email = ?", [email])
 
     if (existingUsers.length > 0) {
       return res.status(400).json({
@@ -154,7 +154,7 @@ export const getProfile = async (req, res) => {
     const [users] = await pool.query(
       `
       SELECT u.*, r.name as roleName, r.permissionEdit 
-      FROM Users u
+      FROM users u
       JOIN Roles r ON u.roleId = r.id
       WHERE u.id = ?
     `,
