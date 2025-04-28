@@ -1,8 +1,7 @@
 // src/middleware/auth.middleware.js
 import jwt from "jsonwebtoken"
 import { pool } from "../db.js"
-import { JWT_SECRET } from "../config.js"
-
+const JWT_SECRET = "6eafa26b974aab4fc374b776435857f559a3396a29c9ac42a4d42d557b6c22ff"
 // Protect routes - verify token
 export const protect = async (req, res, next) => {
   let token;
