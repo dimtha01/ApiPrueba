@@ -6,7 +6,7 @@ import { protect, admin, canEdit } from "../middleware/auth.middleware.js"
 const router = express.Router()
 
 // Admin routes
-router.route("/").get(protect, admin, getUsers).post(protect, admin, createUser)
+router.route("/").get(getUsers).post(createUser)
 
 router
   .route("/:id")

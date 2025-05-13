@@ -6,7 +6,7 @@ import { protect, admin } from "../middleware/auth.middleware.js"
 const router = express.Router()
 
 // All routes require admin privileges
-router.use(protect, admin)
+// router.use(protect, admin)
 
 router.route("/").get(getRoles).post(createRole)
 

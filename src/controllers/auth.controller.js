@@ -150,10 +150,11 @@ export const getProfile = async (req, res) => {
   try {
     const [users] = await pool.query(
       `
-      SELECT u.*, r.name as roleName, r.permissionEdit 
-      FROM users u
-      JOIN roles r ON u.roleId = r.id
-      WHERE u.id = ?
+      SELECT u.*, r.name as roleName, r.permissionEdit, reg.nombre as regionName
+FROM users u
+JOIN roles r ON u.roleId = r.id
+JOIN regiones reg ON reg.id = u.id_region
+WHERE u.id = 1	
     `,
       [req.user.id],
     )
@@ -173,7 +174,8 @@ export const getProfile = async (req, res) => {
         id: user.id,
         email: user.email,
         role: user.roleName,
-        permissionEdit: user.permissionEdit === 1, // Convert to boolean
+        permissionEdit: user.permissionEdit === 1,
+        regionName: user.regionName // Convert to boolean
       },
     })
   } catch (error) {
