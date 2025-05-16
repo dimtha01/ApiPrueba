@@ -5,6 +5,8 @@ export const getRequisitions = async (req, res) => {
     const [result] = await pool.query(`
      SELECT
     r.id,
+    p.id as id_proyecto,
+    pr.id as id_proveedores,
     tr.nombre AS tipo_requisition,
     r.nro_requisicion,
     pr.nombre_comercial AS nombre_comercial_proveedor,
