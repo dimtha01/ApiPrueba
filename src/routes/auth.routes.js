@@ -12,6 +12,6 @@ router.post("/login", login)
 router.get("/profile", protect, getProfile)
 
 // Admin routes
-router.post("/register", protect, admin, register)
+router.post("/register", register)
 
 export default router

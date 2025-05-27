@@ -3,26 +3,26 @@ import { pool } from "../db.js";
 export const getRequisitions = async (req, res) => {
   try {
     const [result] = await pool.query(`
-     SELECT
-    r.id,
-    p.id as id_proyecto,
-    pr.id as id_proveedores,
-    tr.nombre AS tipo_requisition,
-    r.nro_requisicion,
-    pr.nombre_comercial AS nombre_comercial_proveedor,
-    p.nombre_cortos AS nombre_corto_proyecto,
-    r.fecha_elaboracion,
-    r.monto_total,
-    r.nro_renglones,
-    r.monto_anticipo,
-    r.nro_odc
-FROM
-    requisition r
-    INNER JOIN tipo_requisition tr ON r.id_tipo = tr.id
-    INNER JOIN proyectos p ON r.id_proyecto = p.id
-    INNER JOIN proveedores pr ON r.id_proveedores = pr.id
-ORDER BY
-    r.id DESC;  
+      SELECT
+        r.id,
+        p.id AS id_proyecto,
+        pr.id AS id_proveedores,
+        tr.nombre AS tipo_requisition,
+        r.nro_requisicion,
+        pr.nombre_comercial AS nombre_comercial_proveedor,
+        p.nombre_cortos AS nombre_corto_proyecto, -- Usar LEFT JOIN para permitir NULL
+        r.fecha_elaboracion,
+        r.monto_total,
+        r.nro_renglones,
+        r.monto_anticipo,
+        r.nro_odc
+      FROM
+        requisition r
+        INNER JOIN tipo_requisition tr ON r.id_tipo = tr.id
+        LEFT JOIN proyectos p ON r.id_proyecto = p.id -- Cambiar INNER JOIN por LEFT JOIN
+        INNER JOIN proveedores pr ON r.id_proveedores = pr.id
+      ORDER BY
+        r.id DESC;
     `);
 
     // Devolver los resultados
@@ -89,7 +89,6 @@ export const createRequisition = async (req, res) => {
     // Validar que todos los campos obligatorios estén presentes
     if (
       !id_tipo ||
-      !id_proyecto ||
       !nro_requisicion ||
       !id_proveedores ||
       !fecha_elaboracion ||

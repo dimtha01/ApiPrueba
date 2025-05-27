@@ -26,10 +26,11 @@ export const login = async (req, res) => {
     // Check if user exists
     const [users] = await pool.query(
       `
-      SELECT u.*, r.name as roleName, r.permissionEdit 
-      FROM users u
-      JOIN roles r ON u.roleId = r.id
-      WHERE u.email = ?
+       SELECT u.*, r.name as roleName, r.permissionEdit, reg.nombre as regionName
+       FROM users u
+       JOIN roles r ON u.roleId = r.id
+       JOIN regiones reg ON reg.id = u.id_region
+       WHERE u.email = ?
     `,
       [email],
     )
@@ -154,7 +155,7 @@ export const getProfile = async (req, res) => {
 FROM users u
 JOIN roles r ON u.roleId = r.id
 JOIN regiones reg ON reg.id = u.id_region
-WHERE u.id = 1	
+WHERE u.id = ?	
     `,
       [req.user.id],
     )
