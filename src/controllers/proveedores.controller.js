@@ -47,7 +47,7 @@ export const createProveedor = async (req, res) => {
     const { nombre_comercial, direccion_fiscal, pais, telefono, email, RIF } = req.body;
 
     // Validación de campos obligatorios
-    if (!nombre_comercial || !direccion_fiscal || !pais || !telefono || !email) {
+    if (!nombre_comercial || !direccion_fiscal || !pais) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
 
@@ -58,7 +58,7 @@ export const createProveedor = async (req, res) => {
       `INSERT INTO proveedores 
        (nombre_comercial, direccion_fiscal, pais, telefono, email, RIF) 
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [nombre_comercial, direccion_fiscal, pais, telefono, email, RIF]
+      [nombre_comercial, direccion_fiscal, pais, telefono || "Pendiente", email || "Pendiente", RIF]
     );
 
     // Obtener el proveedor recién creado con su estatus
