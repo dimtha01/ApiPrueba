@@ -44,25 +44,21 @@ export const getProveedorById = async (req, res) => {
 
 export const createProveedor = async (req, res) => {
   try {
-    const { nombre_comercial, direccion_fiscal, pais, telefono, email, rif } = req.body;
+    const { nombre_comercial, direccion_fiscal, pais, telefono, email, RIF } = req.body;
 
     // Validación de campos obligatorios
-    if (!nombre_comercial || !direccion_fiscal || !pais || !telefono || !email || !rif) {
+    if (!nombre_comercial || !direccion_fiscal || !pais || !telefono || !email) {
       return res.status(400).json({ message: "Todos los campos son obligatorios" });
     }
 
     // Validar formato de RIF (ejemplo: J-123456789)
-    const rifRegex = /^[JGVEP]-[0-9]{8,9}$/;
-    if (!rifRegex.test(rif)) {
-      return res.status(400).json({ message: "Formato de RIF inválido. Debe ser como: J-123456789" });
-    }
 
     // Insertar el proveedor (estatus_id = 1 por defecto)
     const [result] = await pool.query(
       `INSERT INTO proveedores 
-       (nombre_comercial, direccion_fiscal, pais, telefono, email, rif) 
+       (nombre_comercial, direccion_fiscal, pais, telefono, email, RIF) 
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [nombre_comercial, direccion_fiscal, pais, telefono, email, rif]
+      [nombre_comercial, direccion_fiscal, pais, telefono, email, RIF]
     );
 
     // Obtener el proveedor recién creado con su estatus
