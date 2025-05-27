@@ -22,7 +22,7 @@ export const getRequisitions = async (req, res) => {
         LEFT JOIN proyectos p ON r.id_proyecto = p.id -- Cambiar INNER JOIN por LEFT JOIN
         INNER JOIN proveedores pr ON r.id_proveedores = pr.id
       ORDER BY
-        r.nro_requisicion DESC;
+        r.nro_odc DESC;
     `);
 
     // Devolver los resultados
