@@ -922,3 +922,33 @@ export const putProyect = async (req, res) => {
     return res.status(500).json({ message: "Error al actualizar el proyecto" });
   }
 };
+export const deleteProyect = async (req, res) => {
+  try {
+    const { id } = req.params; // Obtener el ID del proyecto a eliminar del parámetro de URL
+    console.log(id);
+
+    // Verificar si el proyecto existe
+    const [existingProject] = await pool.query("SELECT * FROM proyectos WHERE id = ?", [id]);
+    if (existingProject.length === 0) {
+      return res.status(404).json({ message: "El proyecto no existe" });
+    }
+
+    // Eliminar registros relacionados en otras tablas
+    await pool.query("DELETE FROM avance_fisico WHERE id_proyecto = ?", [id]); // Eliminar avances físicos
+    await pool.query("DELETE FROM costos_proyectos WHERE id_proyecto = ?", [id]); // Eliminar costos de proyectos
+    await pool.query("DELETE FROM avance_financiero WHERE id_proyecto = ?", [id]); // Eliminar avances financieros
+    await pool.query("DELETE FROM requisition WHERE id_proyecto = ?", [id]); // Eliminar requisiciones
+
+    // Finalmente, eliminar el proyecto
+    await pool.query("DELETE FROM proyectos WHERE id = ?", [id]);
+
+    // Devolver una respuesta exitosa
+    res.status(200).json({
+      message: "Proyecto eliminado correctamente",
+      id,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Error al eliminar el proyecto" });
+  }
+};
