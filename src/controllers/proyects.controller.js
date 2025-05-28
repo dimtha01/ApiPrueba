@@ -8,6 +8,9 @@ export const getProyectsAll = async (req, res) => {
         p.numero,
         p.nombre AS nombre_proyecto,
         p.nombre_cortos,
+        p.id_estatus_comercial,
+        p.id_region,
+        p.id_cliente,
         p.codigo_contrato_cliente, -- Campo agregado: Código del contrato del cliente
         p.oferta_del_proveedor,
         c.nombre AS nombre_cliente,
@@ -195,6 +198,9 @@ export const getProyectsAllRequisition = async (req, res) => {
         p.numero,
         p.nombre AS nombre_proyecto,
         p.nombre_cortos,
+        p.id_estatus_comercial,
+        p.id_region,
+        p.id_cliente,
         p.codigo_contrato_cliente, -- Campo agregado: Código del contrato del cliente
         p.oferta_del_proveedor,
         c.nombre AS nombre_cliente,

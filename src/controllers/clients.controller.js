@@ -15,7 +15,8 @@ export const getClientes = async (req, res) => {
         c.direccion, 
         c.unidad_negocio, 
         c.razon_social, 
-        c.nombre_comercial, 
+        c.nombre_comercial,
+        c.id_region,
         r.nombre AS region
       FROM clientes c
       LEFT JOIN regiones r ON c.id_region = r.id
