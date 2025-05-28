@@ -826,6 +826,7 @@ export const putProyect = async (req, res) => {
           "id_cliente",
           "id_responsable",
           "id_region",
+          "oferta_del_proveedor",
           "id_contrato",
           "costo_estimado",
           "monto_ofertado",
